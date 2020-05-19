@@ -1,4 +1,4 @@
-black       = '#1E1E1E'; // black (coal)
+black       = '#050505'; // black (coal)
 red         = '#ED3A2C'; // red
 green       = '#1ABC9C'; // green (turqoise)
 yellow      = '#F39C12'; // yellow (orange)
