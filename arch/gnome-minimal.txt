@@ -1,7 +1,7 @@
 1. Install xorg
 pacman -S xorg-server xorg-xinit
 Intel GPU: pacman -S xf86-video-intel
-NVidia: pacman -S nvidia && nvidia-xconfig
+NVidia: pacman -S nvidia (or nvidia-lts) && nvidia-xconfig
 
 
 2. Gnome
