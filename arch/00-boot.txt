@@ -1,0 +1,53 @@
+1. Set keyboard layout if needed: loadkeys <keymaps> (/usr/share/kbd/keymaps/**.*.map.gz)
+
+2. Verify UEFI boot -> ls /sys/firmware/efi/efivars
+
+3. Connect to internet
+Checking: ip link
+Setup: iwctl / nmcli
+
+4. Update system clock
+Run: timedatectl set-ntp true
+
+5. Use gdisk to partition disk
+EFI partition: 512M (EF00)
+Swap partition: double the ram (8200)
+Root: (8300)
+Home: (8300)
+
+6. Format the disks
+Wipe: wipefs -a /device
+mkfs.fat -F32 <efi_partition>
+mkfs.ext4 <home_root_partitions>
+mkswap <swap_partition>
+swapon <swap_partition>
+
+For formatting nvme
+Package: nvme-cli
+nvme format /device
+
+For encryption:
+Need: cryptsetup
+cryptsetup -y -v luksFormat /device
+cryptsetup luksOpen /device name
+Create filesystem at /dev/mapper/name
+mount /dev/mapper/name /mountpoint
+umount
+cryptsetup luksClose name
+
+vim /etc/crypttab
+-> name		UUID=device_UUID	none
+
+Get UUID: blkid /dev (or: lsblk -no UUID /dev)
+
+7. Mount partitions
+mount <root> /mnt
+mkdir -p /mnt/boot/efi /mnt/home
+mount <home> /mnt/home
+
+8. Bootstrap & Generate fstab
+pacstrap /mnt base
+genfstab -U /mnt >> /mnt/etc/fstab
+
+9. Chroot
+arch-chroot /mnt

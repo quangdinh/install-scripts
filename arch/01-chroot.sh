@@ -1,4 +1,4 @@
-!/usr/bin/env bash
+#!/usr/bin/env bash
 
 echo Updating pacman
 pacman -Syu
@@ -58,3 +58,13 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 echo Updating root password
 passwd
+
+echo Creating User
+read -p "Username: " var_username
+read -p "Full Name: " var_fullname
+read -p "Creating $var_username ($var_fullname). Are you sure? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  useradd -G wheel,input,lp -m -c "$var_fullname" $var_username
+  passwd $var_username
+fi
