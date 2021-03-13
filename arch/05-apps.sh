@@ -17,7 +17,7 @@ fi
 read -p "Do you want to install OnlyOffice? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  sh aur.sh onlyoffice-bin-bin
+  sh aur.sh onlyoffice-bin
 fi
 
 read -p "Do you want to install Postman? " -n 1 -r
