@@ -37,7 +37,7 @@ read -p "Do you want to install basic Gnome utilities? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo Installing basic Gnome utilities
-  pacman -S --noconfirm eog evince file-roller gedit gnome-backgrounds gnome-calendar gnome-disk-utility gnome-screenshot  gnome-shell-extensions gnome-system-monitor gnome-terminal gnome-themes-extra nautilus sushi gnome-tweaks ttf-droid gnome-calculator xf86-input-wacom vlc rhythmbox
+  pacman -S --noconfirm eog evince file-roller gedit gnome-backgrounds gnome-disk-utility gnome-screenshot gnome-shell-extensions gnome-system-monitor gnome-terminal gnome-themes-extra nautilus sushi gnome-tweaks ttf-droid gnome-calculator xf86-input-wacom
 fi
 
 read -p "Do you want to install GVFS? " -n 1 -r
@@ -46,10 +46,22 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   pacman -S --noconfirm gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc gvfs-goa gvfs-google
 fi
 
-read -p "Do you want to install Geary (Email Client)? " -n 1 -r
+read -p "Do you want to install Evolution (Email Client)? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  pacman -S --noconfirm geary
+  pacman -S --noconfirm evolution
+fi
+
+read -p "Do you want to install Totem? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  pacman -S --noconfirm xvidcore x264 ffmpeg gst-libav totem
+fi
+
+read -p "Do you want to install Rhythmbox? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  pacman -S --noconfirm rhythmbox
 fi
 
 read -p "Do you have fingerprint reader? " -n 1 -r
