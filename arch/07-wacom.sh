@@ -5,6 +5,7 @@ file_name="/usr/local/bin/configure-wacom.sh"
 read -p "Do you want to setup Wacom? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
+  sudo cp ./99-wacom.rules /etc/udev/rules.d
   sudo cp ./configure-wacom.sh $file_name
   sudo chmod +x $file_name
   mkdir -p ~/.config/systemd/user
