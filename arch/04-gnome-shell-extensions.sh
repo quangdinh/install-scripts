@@ -5,3 +5,6 @@ sh aur.sh gnome-shell-extension-dash-to-dock
 
 echo Installing gnome-shell-extension-tray-icons
 sh aur.sh gnome-shell-extension-tray-icons
+
+echo Installing gnome-shell-extension-desktop-icons
+sh aur.sh gnome-shell-extension-desktop-icons
