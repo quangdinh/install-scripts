@@ -24,7 +24,7 @@ else
   fi
 fi
 
-echo Installing minimal Gnome
+echo Installing minimal Gnome with GDM
 pacman -S --noconfirm gnome-shell gdm gnome-menus tracker3 tracker3-miners xdg-user-dirs-gtk gnome-session gnome-settings-daemon gnome-color-manager gnome-control-center gnome-keyring mutter sof-firmware
 
 read -p "Do you want to enable GDM on startup? " -n 1 -r

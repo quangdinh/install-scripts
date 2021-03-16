@@ -53,6 +53,14 @@ mkdir -p /boot/efi
 mount $var_efi /boot/efi
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+
+read -p "Do you want to hide Grub menu? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  sed -i -e 's/GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/g' /etc/default/grub
+  sed -i -e 's/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/g' /etc/default/grub
+fi
+
 grub-mkconfig -o /boot/grub/grub.cfg
 
 echo Updating root password
@@ -69,5 +77,5 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 echo #########################
-echo Done installing base. Please exit chroot, umount partitions and reboot
-echo Don't forget to add entries to /etc/crypttab if using encrypted partitions
+echo "Done installing base. Please exit chroot, umount partitions and reboot"
+echo "Don't forget to add entries to /etc/crypttab if using encrypted partitions"
