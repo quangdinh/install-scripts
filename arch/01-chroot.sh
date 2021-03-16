@@ -13,7 +13,7 @@ echo Updating pacman
 pacman -Syu
 
 echo Installing kernel
-pacman -S --noconfirm linux-lts linux-firmware
+pacman -S --noconfirm linux-lts linux-firmware usbutils pciutils
 
 
 echo Installing NetworkManager
