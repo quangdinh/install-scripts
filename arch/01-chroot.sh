@@ -24,6 +24,17 @@ echo Installing vim and sudo
 pacman -S --noconfirm vim sudo
 echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 
+echo -ne "Detecting bluetooth: "
+var_bluetooth=$(lsusb | grep -om1 Bluetooth)
+if [ $var_bluetooth == "Bluetooth" ]; then
+  echo -ne "Found\n"
+  echo "Installing bluetooth tools"
+  pacman -S --noconfirm bluez bluez-utils
+  systemctl enable bluetooth
+else
+  echo -ne "Not found\n"
+fi
+
 echo Enter hostname
 read var_hostname
 
