@@ -64,6 +64,20 @@ mkdir -p /boot/efi
 mount $var_efi /boot/efi
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+echo "Installing grub to $var_efi"
+regex=$'/dev/(.*[a-z])([0-9]+$)'
+[[ $var_efi =~ $regex ]]
+efi_part=${BASH_REMATCH[2]}
+efi_dev=${BASH_REMATCH[1]}
+regex=$'.+([0-9]+p)$'
+[[ $efi_dev =~ $regex ]]
+if ! [ -e ${BASH_REMATCH[1]} ]; then
+  regex=$'(.+)p$'
+  [[ $efi_dev =~ $regex ]]
+  efi_dev=${BASH_REMATCH[1]}
+fi
+echo "Updating EFI Name on /dev/$efi_dev part $efi_part"
+efibootmgr --create --disk $efi_dev --part $efi_part --label 'Arch Linux' --loader /EFI/GRUB/grubx64.efi
 
 read -p "Do you want to hide Grub menu? " -n 1 -r
 echo
