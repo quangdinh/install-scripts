@@ -15,4 +15,4 @@ sh aur.sh gnome-shell-extension-sound-output-device-chooser
 
 sh aur.sh gnome-shell-extension-clipboard-indicator
 
-sh aur..sh gnome-shell-extension-remove-dropdown-arrows
+sh aur.sh gnome-shell-extension-remove-dropdown-arrows
