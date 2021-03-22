@@ -29,8 +29,7 @@ read -p "Do you want to install Docker & Docker Compose? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   sudo pacman -S --noconfirm docker docker-compose
-  current_user=$(whoami)
-  sudo usermod -aG docker &current_user
+  sudo usermod -aG docker $(whoami)
   sudo systemctl enable docker
 fi
 
