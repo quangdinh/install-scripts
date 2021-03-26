@@ -3,19 +3,19 @@
 read -p "Do you want to install Postman? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  sh aur.sh postman-bin
+  sh aur.sh install -y postman-bin
 fi
 
 read -p "Do you want to install Visual Studio Code? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  sh aur.sh visual-studio-code-bin
+  sh aur.sh install -y visual-studio-code-bin
 fi
 
 read -p "Do you want to install Android Studio? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  sh aur.sh android-studio
+  sh aur.sh install -y android-studio
 fi
 
 read -p "Do you want to install Nodejs? " -n 1 -r
