@@ -58,13 +58,12 @@ function checkPackage() {
   dir="$aurDir/$1"
   if [ -d "$dir" ]; then
     e=true
+    u=false
     cd "$dir"
-    git reset HEAD --hard >> /dev/null
-    h=$(git rev-parse --short HEAD)
-    hn=$(git rev-parse --short HEAD)
-    if [ "$h" = "$hn" ]; then 
-      u=false
-    else
+    git fetch
+    git_status_sb=$(git status -sb 2>/dev/null)
+    regex="behind ([0-9]+)"
+    if [[ $git_status_sb =~ $regex ]]; then
       u=true
     fi
   else
@@ -76,11 +75,52 @@ function checkPackage() {
 function doInstall() {
   dir="$aurDir/$1"
   cd $dir
+  git reset HEAD >> /dev/null
+  git pull >> /dev/null
   if [ $skip_confirm = true ]; then
     makepkg -si --noconfirm
   else
     makepkg -si
   fi
+}
+
+function doCheck() {
+  local exists
+  local update
+  package=$1
+  checkPackage exists update $package
+  if [ $exists = true ]; then
+    if [ $update = true ]; then
+      echo "Update available for package $package"
+    else
+      echo "Package $package already up-to-date"
+    fi
+  else
+    echo "Package $package not installed"
+  fi
+}
+
+
+function check() {
+  createAUR
+  local packages
+  parseInput packages "$@"
+
+
+  if [ "${packages[0]}" = "all" ]; then
+    echo "Checking all packages in $aurDir"
+    cd "$aurDir"
+    packages=()
+    for file in *; do
+      if [ -d "$file" ]; then
+          packages+=( "$file" )
+      fi
+    done
+  fi
+
+  for package in "${packages[@]}"; do
+    doCheck $package
+  done
 }
 
 function install() {
@@ -152,6 +192,8 @@ if [ "$cmd" = "update" ]; then
   update $@
 elif [ "$cmd" = "install" ]; then
   install $@
+elif [ "$cmd" = "check" ]; then
+  check $@
 else
   echo $args
   usage
