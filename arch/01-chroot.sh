@@ -76,8 +76,13 @@ if ! [ -e ${BASH_REMATCH[1]} ]; then
   [[ $efi_dev =~ $regex ]]
   efi_dev=${BASH_REMATCH[1]}
 fi
-echo "Updating EFI Name on /dev/$efi_dev part $efi_part"
-efibootmgr --create --disk $efi_dev --part $efi_part --label 'Arch Linux' --loader /EFI/GRUB/grubx64.efi
+
+read -p "Do you want to rename boot menu? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  echo "Updating EFI Name on /dev/$efi_dev part $efi_part"
+  efibootmgr --create --disk $efi_dev --part $efi_part --label 'Arch Linux' --loader /EFI/GRUB/grubx64.efi
+fi
 
 read -p "Do you want to hide Grub menu? " -n 1 -r
 echo
