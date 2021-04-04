@@ -77,13 +77,6 @@ if ! [ -e ${BASH_REMATCH[1]} ]; then
   efi_dev=${BASH_REMATCH[1]}
 fi
 
-read -p "Do you want to rename boot menu? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  echo "Updating EFI Name on /dev/$efi_dev part $efi_part"
-  efibootmgr --create --disk $efi_dev --part $efi_part --label 'Arch Linux' --loader /EFI/GRUB/grubx64.efi
-fi
-
 read -p "Do you want to hide Grub menu? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -95,6 +88,18 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 echo Updating root password
 passwd
+
+read -p "Do you want to switch shell to ZSH? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  pacman -S zsh
+  zsh_path=$(which zsh)
+  chsh -s $zsh_path
+  zsh_path_esc=$(echo $zsh_path | sed 's_/_\\/_g')
+  sed -i -e "s/SHELL=.*/\SHELL=$zsh_path_esc/g" /etc/default/useradd
+  rm -rf /etc/skel
+  cp -a ./zsh_skell /etc/skel
+fi
 
 echo Creating User
 read -p "Username: " var_username

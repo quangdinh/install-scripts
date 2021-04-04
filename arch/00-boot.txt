@@ -40,6 +40,12 @@ vim /etc/crypttab
 
 Get UUID: blkid /dev (or: lsblk -no UUID /dev)
 
+For LVM
+Create Physical Volume: pvcreate [dev]
+Create Volume Group: vgcreate [Name] [dev]
+Create Logical Volume: lvcreate -L [size] [VGroup] -n [name]
+Create Logical Volume remaining space: lvcreate -l 100%FREE [VGroup] -n [name]
+
 7. Mount partitions
 mount <root> /mnt
 mkdir -p /mnt/boot/efi /mnt/home

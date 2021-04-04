@@ -25,7 +25,7 @@ else
 fi
 
 echo Installing minimal Gnome with GDM
-pacman -S --noconfirm gnome-shell gdm gnome-menus tracker3 tracker3-miners xdg-user-dirs-gtk gnome-session gnome-settings-daemon gnome-color-manager gnome-control-center gnome-keyring mutter sof-firmware
+pacman -S --noconfirm gnome-shell gdm gnome-menus tracker3 tracker3-miners xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware
 
 systemctl enable gdm
 
@@ -33,7 +33,7 @@ read -p "Do you want to install basic Gnome utilities? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo Installing basic Gnome utilities
-  pacman -S --noconfirm eog evince file-roller gedit gnome-backgrounds gnome-disk-utility gnome-screenshot gnome-shell-extensions gnome-system-monitor gnome-terminal gnome-themes-extra nautilus sushi gnome-tweaks ttf-droid gnome-calculator xf86-input-wacom
+  pacman -S --noconfirm eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor gnome-terminal nautilus sushi gnome-tweaks ttf-droid gnome-calculator xf86-input-wacom
 fi
 
 read -p "Do you want to install GVFS? " -n 1 -r
