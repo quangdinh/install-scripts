@@ -12,6 +12,7 @@ else
   echo $root_partition
   sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet cryptdevice=UUID=$uuid:cryptlvm root=UUID=$root_partition\"/g" /etc/default/grub
   sed -i -e 's/HOOKS=(.*)/HOOKS=(base udev autodetect keyboard modconf block encrypt lvm2 filesystems fsck)/g' /etc/mkinitcpio.conf
+  sleep 1
   mkinitcpio -P
   grub-mkconfig -o /boot/grub/grub.conf
 fi

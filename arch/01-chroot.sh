@@ -93,12 +93,12 @@ read -p "Do you want to switch shell to ZSH? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   pacman -S zsh
-  zsh_path=$(which zsh)
+  zsh_path=/usr/bin/zsh
   chsh -s $zsh_path
   zsh_path_esc=$(echo $zsh_path | sed 's_/_\\/_g')
   sed -i -e "s/SHELL=.*/\SHELL=$zsh_path_esc/g" /etc/default/useradd
   rm -rf /etc/skel
-  cp -a ./zsh_skell /etc/skel
+  cp -a ./zsh_skel /etc/skel
 fi
 
 echo Creating User
