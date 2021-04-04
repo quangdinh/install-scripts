@@ -84,8 +84,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   sed -i -e 's/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/g' /etc/default/grub
 fi
 
-grub-mkconfig -o /boot/grub/grub.cfg
-
 echo Updating root password
 passwd
 
@@ -110,6 +108,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   useradd -G wheel,input,lp -m -c "$var_fullname" $var_username
   passwd $var_username
 fi
+
+grub-mkconfig -o /boot/grub/grub.cfg
 
 echo #########################
 echo "Done installing base. Please exit chroot, umount partitions and reboot"
