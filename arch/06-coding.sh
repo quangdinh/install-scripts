@@ -37,9 +37,5 @@ fi
 read -p "Do you want to install Golang? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  curl -L https://golang.org/dl/go1.16.2.linux-amd64.tar.gz -o go.tar.gz
-  tar xvpf go.tar.gz
-  sudo rm -rf /usr/local/go
-  sudo mv go /usr/local
-  rm -rf go.tar.gz
+  sudo pacman -S --noconfirm go
 fi
