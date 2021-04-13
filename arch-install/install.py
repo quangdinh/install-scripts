@@ -513,10 +513,11 @@ print("Done")
 print_task("Generating locales")
 the_locales = []
 for locale in locales:
-  the_locales.append(locale + ".UTF8 UTF-8")
+  the_locales.append(locale + ".UTF-8 UTF-8")
   the_locales.append(locale + " ISO-8859-1")
-run_chroot("echo", "-e", "\\n".join(the_locales), ">", "/etc/locale.gen")
-run_chroot("echo", "-e", "LANG=" + lang , ">", "/etc/locale.conf")
+local_gen = "\\n".join(the_locales)
+run_chroot("sh -c '", "echo", "-e", local_gen, ">", "/etc/locale.gen", "'")
+run_chroot("sh -c '", "echo", "-e", "LANG=" + lang , ">", "/etc/locale.conf", "'")
 run_chroot("/usr/bin/locale-gen")
 print("Done")
 
