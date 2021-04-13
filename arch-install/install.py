@@ -377,28 +377,28 @@ if q.lower() == "no" or q.lower() == "n":
 clear()
 print("This script will install Arch Linux as follow:")
 
-print("{:>25}{:<1} {:<50}".format("Hostname", ":", hostname))
-print("{:>25}{:<1} {:<50}".format("CPU", ":", cpu))
-print("{:>25}{:<1} {:<50}".format("VGA", ":", vga))
+print("{:>35}{:<1} {:<50}".format("Hostname", ":", hostname))
+print("{:>35}{:<1} {:<50}".format("CPU", ":", cpu))
+print("{:>35}{:<1} {:<50}".format("VGA", ":", vga))
 
 if disk == "None":
-  print("{:>25}{:<1} {:<50}".format("Disk", ":", "No partitioning. Already mounted at /mnt"))
+  print("{:>35}{:<1} {:<50}".format("Disk", ":", "No partitioning. Already mounted at /mnt"))
 else:
-  print("{:>25}{:<1} {:<50}".format("Disk", ":", disk + " (Will be partitioned & formatted)"))
-  print("{:>25}{:<1} {:<50}".format("Swap", ":", str(swap) + " GiB"))
-  print("{:>25}{:<1} {:<50}".format("Encryption", ":", string_bool(encrypt)))
+  print("{:>35}{:<1} {:<50}".format("Disk", ":", disk + " (Will be partitioned & formatted)"))
+  print("{:>35}{:<1} {:<50}".format("Swap", ":", str(swap) + " GiB"))
+  print("{:>35}{:<1} {:<50}".format("Encryption", ":", string_bool(encrypt)))
 
-print("{:>25}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_label + ")"))
-print("{:>25}{:<1} {:<50}".format("Timezone", ":", timezone))
-print("{:>25}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
-print("{:>25}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
-print("{:>25}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
-print("{:>25}{:<1} {:<50}".format("Gnome", ":", string_bool(gnome)))
+print("{:>35}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_label + ")"))
+print("{:>35}{:<1} {:<50}".format("Timezone", ":", timezone))
+print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
+print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
+print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
+print("{:>35}{:<1} {:<50}".format("Gnome", ":", string_bool(gnome)))
 if gnome:
-  print("{:>25}{:<1} {:<50}".format("Gnome utilities", ":", string_bool(gnome_utils)))
-  print("{:>25}{:<1} {:<50}".format("Gnome multimedia applications", ":", string_bool(gnome_multimedia)))
+  print("{:>35}{:<1} {:<50}".format("Gnome utilities", ":", string_bool(gnome_utils)))
+  print("{:>35}{:<1} {:<50}".format("Gnome multimedia applications", ":", string_bool(gnome_multimedia)))
 
-print("{:>25}{:<1} {:<50}".format("Git & base-devel", ":", string_bool(git_base)))
+print("{:>35}{:<1} {:<50}".format("Git & base-devel", ":", string_bool(git_base)))
 print()
 confirm = request_input("Do you want to continue? Type 'YES': ")
 if confirm != "YES":
