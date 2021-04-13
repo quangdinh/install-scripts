@@ -284,6 +284,12 @@ def parse_hooks_encrypt_lvm():
     
   return " ".join(results)
 
+def detect_vga():
+  vga = os.popen("lspci | grep VGA | grep -o -m1 'NVIDIA\|Intel'").readline().strip()
+  if vga == "":
+    return 'Unknown'
+  return vga
+
 def get_crypt_uuid(disk):
   partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="cryptlvm"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
   if partition == "":
@@ -293,10 +299,11 @@ def get_crypt_uuid(disk):
   return uuid
 
 def get_root_uuid():
-  uuid = os.popen("findmnt / -o uuid | tail -n 1").readline().strip()
+  uuid = os.popen("findmnt /mnt -o uuid | tail -n 1").readline().strip()
   return uuid;
 
 cpu = detect_cpu()
+vga = detect_vga()
 
 clear()
 hostname = ask_hostname()
@@ -345,23 +352,53 @@ user_label = request_input("User fullname: ")
 user_password = ask_password()
 
 clear()
+gnome = True
+q = request_input("Do you want to install Gnome? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  gnome = False
+
+gnome_utils = gnome
+if gnome:
+  q = request_input("Do you want to install Gnome utilities? [Yes]/No ")
+  if q.lower() == "no" or q.lower() == "n":
+    gnome_utils = False
+
+gnome_multimedia = gnome
+if gnome:
+  q = request_input("Do you want to install Gnome multimedia applications? [Yes]/No ")
+  if q.lower() == "no" or q.lower() == "n":
+    gnome_multimedia = False
+
+git_base = True
+q = request_input("Do you want to install Git and base-devel? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  git_base = False
+
+clear()
 print("This script will install Arch Linux as follow:")
 
-print("{:>15}{:<1} {:<50}".format("Hostname", ":", hostname))
-print("{:>15}{:<1} {:<50}".format("CPU", ":", cpu))
+print("{:>25}{:<1} {:<50}".format("Hostname", ":", hostname))
+print("{:>25}{:<1} {:<50}".format("CPU", ":", cpu))
+print("{:>25}{:<1} {:<50}".format("VGA", ":", vga))
 
 if disk == "None":
-  print("{:>15}{:<1} {:<50}".format("Disk", ":", "No partitioning. Already mounted at /mnt"))
+  print("{:>25}{:<1} {:<50}".format("Disk", ":", "No partitioning. Already mounted at /mnt"))
 else:
-  print("{:>15}{:<1} {:<50}".format("Disk", ":", disk + " (Will be partitioned & formatted)"))
-  print("{:>15}{:<1} {:<50}".format("Swap", ":", str(swap) + " GiB"))
-  print("{:>15}{:<1} {:<50}".format("Encryption", ":", string_bool(encrypt)))
+  print("{:>25}{:<1} {:<50}".format("Disk", ":", disk + " (Will be partitioned & formatted)"))
+  print("{:>25}{:<1} {:<50}".format("Swap", ":", str(swap) + " GiB"))
+  print("{:>25}{:<1} {:<50}".format("Encryption", ":", string_bool(encrypt)))
 
-print("{:>15}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_label + ")"))
-print("{:>15}{:<1} {:<50}".format("Timezone", ":", timezone))
-print("{:>15}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
-print("{:>15}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
-print("{:>15}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
+print("{:>25}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_label + ")"))
+print("{:>25}{:<1} {:<50}".format("Timezone", ":", timezone))
+print("{:>25}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
+print("{:>25}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
+print("{:>25}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
+print("{:>25}{:<1} {:<50}".format("Gnome", ":", string_bool(gnome)))
+if gnome:
+  print("{:>25}{:<1} {:<50}".format("Gnome utilities", ":", string_bool(gnome_utils)))
+  print("{:>25}{:<1} {:<50}".format("Gnome multimedia applications", ":", string_bool(gnome_multimedia)))
+
+print("{:>25}{:<1} {:<50}".format("Git & base-devel", ":", string_bool(git_base)))
 print()
 confirm = request_input("Do you want to continue? Type 'YES': ")
 if confirm != "YES":
@@ -504,7 +541,7 @@ run_chroot("sh -c", "'echo \"root:" + user_password + "\" | chpasswd'")
 print("Done")
 
 print_task("Setup user account")
-run_chroot("/usr/bin/useradd", "-G wheel,input,lp -m -c", user_label, user_name)
+run_chroot("/usr/bin/useradd", "-G wheel,input,lp -m -c '" + user_label  + "'", user_name)
 run_chroot("sh -c", "'echo \"" + user_name + ":" + user_password + "\" | chpasswd'")
 print("Done")
 
@@ -578,8 +615,38 @@ run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/boot/e
 run_chroot("/usr/bin/grub-mkconfig", "-o", "/boot/grub/grub.cfg")
 print("Done")
 
+if gnome:
+  print_task("Installing X.Org Server")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit")
+  print("Done")
+  if vga == "Intel":
+    print_task("Installing Intel video drivers")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-intel")
+    print("Done")
+  if vga == "Intel":
+    print_task("Installing Nvidia video drivers")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "nvidia-lts")
+    print("Done")
+  print_task("Installing Gnome")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm gnome-menus tracker3 tracker3-miners xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware")
+  run_chroot("/usr/bin/systemctl", "enable", "gdm")
+  print("Done")
+  if gnome_utils:
+    print_task("Installing Gnome utilities")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor gnome-terminal nautilus sushi gnome-tweaks ttf-droid gnome-calculator xf86-input-wacom gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc gvfs-goa gvfs-google")
+    print("Done")
+  if gnome_multimedia:
+    print_task("Installing Gnome multimedia applications")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "evolution xvidcore x264 ffmpeg gst-libav totem rhythmbox")
+    print("Done")
+
+if git_base:
+  print_task("Installing git & base-devel")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel")
+  print("Done")
+
 if disk != "None":
-  if swap > 0:
+  if int(swap) > 0:
     if encrypt:
       partition = "/dev/mapper/" + volume_group + "-lvSwap"
     else:
