@@ -4,7 +4,7 @@ echo Updating pacman
 pacman -Syu
 
 echo Installing X.Org Server
-pacman -S --noconfirm xorg-server xorg-xinit
+pacman -S --noconfirm xorg-server xorg-xinit usbutils pciutils
 
 echo Detected graphics driver
 var_gpu=$(lspci | grep VGA | grep -o -m1 "NVIDIA\|Intel")
