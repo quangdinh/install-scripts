@@ -287,9 +287,11 @@ def parse_hooks_encrypt_lvm():
   return " ".join(results)
 
 def detect_vga():
-  vga = os.popen("lspci | grep VGA | grep -o -m1 'NVIDIA\|Intel'").readline().strip()
+  vga = os.popen("lspci -v | grep -A1 -e VGA -e 3D | grep -o -m1 'NVIDIA\|Intel\|AMD\|ATI\|Radeon'").readline().strip()
   if vga == "":
-    return 'Unknown'
+    return 'Generic'
+  if vga == "AMD" or vga == "ATI" or vga == "Radeon":
+    return "AMD"
   return vga
 
 def get_crypt_uuid(disk):
@@ -629,6 +631,14 @@ if gnome:
   if vga == "Intel":
     print_task("Installing Nvidia video drivers")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "nvidia-lts")
+    print("Done")
+  if vga == "AMD":
+    print_task("Installing AMD/ATI video drivers")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-amdgpu")
+    print("Done")
+  if vga == "Generic":
+    print_task("Installing Generic video drivers")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-fbdev xf86-video-vesa")
     print("Done")
   print_task("Installing Gnome")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm gnome-menus tracker3 tracker3-miners xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware")

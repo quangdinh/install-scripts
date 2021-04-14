@@ -7,7 +7,7 @@ echo Installing X.Org Server
 pacman -S --noconfirm xorg-server xorg-xinit usbutils pciutils
 
 echo Detected graphics driver
-var_gpu=$(lspci | grep VGA | grep -o -m1 "NVIDIA\|Intel")
+var_gpu=$(lspci -nn | grep '\[03' | grep -o -m1 "NVIDIA\|Intel\|AMD")
 if [ -e $var_gpu ]; then
   echo "NVIDIA/Intel GPU not detected"
 else
