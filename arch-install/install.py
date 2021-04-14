@@ -226,7 +226,7 @@ def print_task(task):
 
 def ask_zsh():
   zsh = request_input("Do you want to switch shell to ZSH? [Yes] ")
-  if zsh.lower() == "yes" or zsh.lower() == "y":
+  if zsh.lower() == "yes" or zsh.lower() == "y" or zsh == "":
     return True
   return False
 
