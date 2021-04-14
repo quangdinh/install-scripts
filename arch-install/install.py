@@ -213,11 +213,12 @@ def run_command(*args):
 
 
 def run_chroot(*args):
-  chroot = ["/usr/bin/arch-chroot", "/mnt", *args]
-  cmd = " ".join(chroot)
-  r = os.WEXITSTATUS(os.system(cmd + " >> /mnt/install_log.txt 2>&1"))
+  chroot_cmd = ["/usr/bin/arch-chroot", "/mnt", *args]
+  cmd = " ".join(args)
+  chroot_cmd = "/usr/bin/arch-chroot /mnt sh -c '" + cmd + "'"
+  r = os.WEXITSTATUS(os.system(chroot_cmd + " >> /mnt/install_log.txt 2>&1"))
   if r != 0:
-    print("\n\nError running:", cmd)
+    print("\n\nError running:", chroot_cmd)
     sys.exit(0)
 
 def print_task(task):
@@ -230,7 +231,8 @@ def ask_zsh():
   return False
 
 def copy_zsh_skel():
-  print("COPIED")
+  run_command("rm", "-rf", "/mnt/etc/skel")
+  run_command("cp", "-a", "./zsh_skell", "/mnt/etc/skel")
 
 def parse_efi(efi_part):
   m = re.findall("p[0-9]+", efi_part)
@@ -295,7 +297,7 @@ def get_crypt_uuid(disk):
   if partition == "":
     print("Error! Cryptlvm not found")
     sys.exit(0)
-  uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
+  uuid = os.popen('lsblk -no uuid ' + partition + " | head -n 1").readline().strip()
   return uuid
 
 def get_root_uuid():
@@ -509,15 +511,14 @@ print("Done")
 print_task("Generating fstab")
 run_command("/usr/bin/genfstab", "-U", "/mnt", ">>", "/mnt/etc/fstab")
 print("Done")
-
+run_chroot("rm", "-rf", "/etc/locale.gen")
 print_task("Generating locales")
 the_locales = []
 for locale in locales:
-  the_locales.append(locale + ".UTF-8 UTF-8")
-  the_locales.append(locale + " ISO-8859-1")
-local_gen = "\\n".join(the_locales)
-run_chroot("sh -c '", "echo", "-e", local_gen, ">", "/etc/locale.gen", "'")
-run_chroot("sh -c '", "echo", "-e", "LANG=" + lang , ">", "/etc/locale.conf", "'")
+  run_chroot("echo", locale + ".UTF-8 UTF-8", ">>", "/etc/locale.gen")
+  run_chroot("echo", locale + " ISO-8859-1", ">>", "/etc/locale.gen")
+
+run_chroot("echo", "-e", "LANG=" + lang , ">", "/etc/locale.conf")
 run_chroot("/usr/bin/locale-gen")
 print("Done")
 
@@ -535,15 +536,16 @@ if use_zsh:
   run_chroot("/usr/bin/pacman", "-S", "zsh")
   run_chroot("/usr/bin/chsh", "-s", "/usr/bin/zsh")
   run_chroot("/usr/bin/sed", "-i -e", 's/SHELL=.*/\SHELL=\/usr\/bin\/zsh/g', "/etc/default/useradd")
+  copy_zsh_skel()
   print("Done")
 
 print_task("Setup root account")
-run_chroot("sh -c", "'echo \"root:" + user_password + "\" | chpasswd'")
+run_chroot("echo \"root:" + user_password + "\" | chpasswd")
 print("Done")
 
 print_task("Setup user account")
-run_chroot("/usr/bin/useradd", "-G wheel,input,lp -m -c '" + user_label  + "'", user_name)
-run_chroot("sh -c", "'echo \"" + user_name + ":" + user_password + "\" | chpasswd'")
+run_chroot("/usr/bin/useradd", "-G wheel,input,lp -m -c \"" + user_label  + "\"", user_name)
+run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
 print("Done")
 
 print_task("Updating pacman")
@@ -565,7 +567,7 @@ print("Done")
 
 print_task("Installing Sudo")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
-run_chroot("sh -c", "'echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers'")
+run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
 print("Done")
 
 if bluetooth:
@@ -600,11 +602,11 @@ if disk != "None" and encrypt:
   print_task("Install LVM2 and configure encryption")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "lvm2")
   hooks = parse_hooks_encrypt_lvm()
-  run_chroot("/usr/bin/sed", "-i -e", "'s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g'", "/etc/mkinitcpio.conf")
+  run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
   run_chroot("/usr/bin/mkinitcpio", "-P")
   cryptuuid = get_crypt_uuid(disk)
   rootuuid = get_root_uuid()
-  run_chroot("/usr/bin/sed", "-i -e", "'s/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet cryptdevice=UUID=" + cryptuuid + ":cryptlvm root=UUID=" + rootuuid + "\"/g'", "/etc/default/grub")
+  run_chroot("/usr/bin/sed", "-i -e", '"s/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\\"loglevel=3 quiet cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + '\\"/g"', "/etc/default/grub")
   print("Done")
 
 print_task("Setup Grub")
