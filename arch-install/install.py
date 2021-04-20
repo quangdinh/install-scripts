@@ -421,17 +421,8 @@ if disk != "None":
   print_task("Creating EFI partition")
   run_command("/usr/bin/sgdisk", "-n 0:0:+256M -t 0:ef00 -c 0:EFI", disk)
   print("Done")
-  print_task("Formatting EFI partition")
-  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="EFI"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-  run_command("/usr/bin/mkfs.fat", "-F32", partition)
-  print("Done")
-
   print_task("Creating Boot partition")
   run_command("/usr/bin/sgdisk", "-n 0:0:+512M -t 0:8300 -c 0:boot", disk)
-  print("Done")
-  print_task("Formatting EFI partition")
-  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="boot"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-  run_command("/usr/bin/mkfs.ext4", partition)
   print("Done")
   if encrypt:
     print_task("Creating LUKS partition")
@@ -442,19 +433,27 @@ if disk != "None":
       print_task("Creating SWAP partition")
       run_command("/usr/bin/sgdisk", "-n 0:0:+" + str(swap) + "GiB -t 0:8200 -c 0:swap", disk)
       print("Done")
-      print_task("Enabling Swap")
-      partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="swap"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-      run_command("/usr/bin/mkswap", partition)
-      run_command("/usr/bin/swapon", partition)
-      print("Done")
     print_task("Creating root partition")
     run_command("/usr/bin/sgdisk", "-n 0:0:0 -t 0:8300 -c 0:root", disk)
     print("Done")
-    print_task("Formatting root partition")
-    partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="root"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-    run_command("/usr/bin/mkfs.ext4", partition)
-    print("Done")
+
   run_command("/usr/bin/partprobe", disk)
+
+  if not encrypt and int(swap) > 0:
+    print_task("Enabling Swap")
+    partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="swap"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+    run_command("/usr/bin/mkswap", partition)
+    run_command("/usr/bin/swapon", partition)
+    print("Done")
+
+  print_task("Formatting EFI partition")
+  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="EFI"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+  run_command("/usr/bin/mkfs.fat", "-F32", partition)
+  print("Done")  
+  print_task("Formatting EFI partition")
+  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="boot"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+  run_command("/usr/bin/mkfs.ext4", partition)
+  print("Done")
 
   if encrypt:
     cryptpartition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="cryptlvm"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
@@ -489,13 +488,19 @@ if disk != "None":
     partition = "/dev/mapper/" + volume_group + "-lvRoot"
     run_command("/usr/bin/mkfs.ext4", partition)
     print("Done")
+  else:
+    print_task("Formatting root partition")
+    partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="root"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+    run_command("/usr/bin/mkfs.ext4", partition)
+    print("Done")
+
+
 
   if encrypt:
     partition = "/dev/mapper/" + volume_group + "-lvRoot"
   else:
     partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="root"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
     
-
   print_task("Mounting root")
   run_command("/usr/bin/mount", partition, "/mnt")
   print("Done")
