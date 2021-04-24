@@ -232,7 +232,7 @@ def ask_zsh():
 
 def copy_zsh_skel():
   run_command("rm", "-rf", "/mnt/etc/skel")
-  run_command("cp", "-a", "./zsh_skell", "/mnt/etc/skel")
+  run_command("cp", "-a", "./zsh_skel", "/mnt/etc/skel")
 
 def parse_efi(efi_part):
   m = re.findall("p[0-9]+", efi_part)
@@ -515,11 +515,16 @@ print_task("Bootstrapping")
 run_command("/usr/bin/pacstrap", "/mnt", "base")
 print("Done")
 
+print_task("Updating pacman")
+run_chroot("/usr/bin/pacman", "-Syu")
+print("Done")
+
 print_task("Generating fstab")
 run_command("/usr/bin/genfstab", "-U", "/mnt", ">>", "/mnt/etc/fstab")
 print("Done")
-run_chroot("rm", "-rf", "/etc/locale.gen")
+
 print_task("Generating locales")
+run_chroot("rm", "-rf", "/etc/locale.gen")
 the_locales = []
 for locale in locales:
   run_chroot("echo", locale + ".UTF-8 UTF-8", ">>", "/etc/locale.gen")
@@ -535,14 +540,14 @@ print("Done")
 
 print_task("Setup hostname")
 run_chroot("echo", hostname, ">", "/etc/hostname")
-run_chroot("echo", "-e", "127.0.0.1\\tlocalhost\\n::1\\tlocalhost\\n127.0.1.1\\t" + hostname + ".local " + hostname, ">", "/etc/hosts")
+run_chroot("echo", "-e", '127.0.0.1\\tlocalhost\\n::1\\tlocalhost\\n127.0.1.1\\t' + hostname + '.local ' + hostname, ">", "/etc/hosts")
 print("Done")
 
 if use_zsh:
   print_task("Setup zsh")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "zsh")
   run_chroot("/usr/bin/chsh", "-s", "/usr/bin/zsh")
-  run_chroot("/usr/bin/sed", "-i -e", 's/SHELL=.*/\SHELL=\/usr\/bin\/zsh/g', "/etc/default/useradd")
+  run_chroot("/usr/bin/sed", "-i -e", '"s/SHELL=.*/\SHELL=\/usr\/bin\/zsh/g"', "/etc/default/useradd")
   copy_zsh_skel()
   print("Done")
 
@@ -553,10 +558,6 @@ print("Done")
 print_task("Setup user account")
 run_chroot("/usr/bin/useradd", "-G wheel,input,lp -m -c \"" + user_label  + "\"", user_name)
 run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
-print("Done")
-
-print_task("Updating pacman")
-run_chroot("/usr/bin/pacman", "-Syu")
 print("Done")
 
 print_task("Installing kernel")
