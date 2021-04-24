@@ -540,7 +540,7 @@ print("Done")
 
 if use_zsh:
   print_task("Setup zsh")
-  run_chroot("/usr/bin/pacman", "-S", "zsh")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "zsh")
   run_chroot("/usr/bin/chsh", "-s", "/usr/bin/zsh")
   run_chroot("/usr/bin/sed", "-i -e", 's/SHELL=.*/\SHELL=\/usr\/bin\/zsh/g', "/etc/default/useradd")
   copy_zsh_skel()
