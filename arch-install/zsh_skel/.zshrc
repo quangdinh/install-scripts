@@ -9,7 +9,12 @@ gh() {
 }
 
 yk() {
-  ssh-add -s /usr/lib/opensc-pkcs11.so
+  if [[ -f /usr/lib/opensc-pkcs11 ]]; then
+    ssh-add -s /usr/lib/opensc-pkcs11.so
+  fi
+  if [[ -f /usr/local/lib/opensc-pkcs11 ]]; then
+    ssh-add -s /usr/local/lib/opensc-pkcs11.so
+  fi
 }
 
 if which dircolors &>/dev/null; then

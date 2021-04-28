@@ -299,7 +299,7 @@ def get_crypt_uuid(disk):
   if partition == "":
     print("Error! Cryptlvm not found")
     sys.exit(0)
-  uuid = os.popen('lsblk -no uuid ' + partition + " | head -n 1").readline().strip()
+  uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
   return uuid
 
 def get_root_uuid():
@@ -356,6 +356,13 @@ user_label = request_input("User fullname: ")
 user_password = ask_password()
 
 clear()
+
+yubi_key = True
+q = request_input("Do you want to use Yubikey? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  yubi_key = False
+
+
 gnome = True
 q = request_input("Do you want to install Gnome? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
@@ -397,6 +404,7 @@ print("{:>35}{:<1} {:<50}".format("Timezone", ":", timezone))
 print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
 print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
+print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
 print("{:>35}{:<1} {:<50}".format("Gnome", ":", string_bool(gnome)))
 if gnome:
   print("{:>35}{:<1} {:<50}".format("Gnome utilities", ":", string_bool(gnome_utils)))
@@ -552,7 +560,7 @@ if use_zsh:
   print("Done")
 
 print_task("Setup root account")
-run_chroot("echo \"root:" + user_password + "\" | chpasswd")
+run_chroot("echo \"root:" + root_password + "\" | chpasswd")
 print("Done")
 
 print_task("Setup user account")
@@ -577,6 +585,12 @@ print_task("Installing Sudo")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
 run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
 print("Done")
+
+if yubi_key:
+  print_task("Install Yubikey opensc & pam-u2f")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "ccid pam-u2f opensc")
+  run_chroot("/usr/bin/systemctl", "enable", "pcscd.service")
+  print("Done")
 
 if bluetooth:
   print_task("Installing Bluetooth")
