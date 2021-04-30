@@ -213,7 +213,7 @@ def run_command(*args):
 
 def run_chrootuser(user, *args):
   cmd = " ".join(args)
-  chroot_cmd = "/usr/bin/arch-chroot /mnt su " + user + "sh -c '" + cmd + "'"
+  chroot_cmd = "/usr/bin/arch-chroot /mnt su " + user + " sh -c '" + cmd + "'"
   r = os.WEXITSTATUS(os.system(chroot_cmd + " >> /mnt/install_log.txt 2>&1"))
   if r != 0:
     print("\n\nError running:", chroot_cmd)
