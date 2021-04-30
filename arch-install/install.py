@@ -697,7 +697,8 @@ if yay:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go")
 
   run_chrootuser(user_name, "git", "clone", "https://aur.archlinux.org/yay.git", "~/yay")
-  run_chrootuser(user_name, "cd ~/yay", "&&", "echo " + user_password, "|", "makepkg -si --noconfirm -S")
+  run_chrootuser(user_name, "cd ~/yay", "&&", "makepkg -s --noconfirm")
+  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/home/" + user_name + "/yay/yay*.pkg.tar.zst")
   run_chrootuser(user_name, "rm -rf ~/yay")
   print("Done")
 
