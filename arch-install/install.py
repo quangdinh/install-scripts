@@ -211,6 +211,13 @@ def run_command(*args):
     print("\n\nError running:", cmd)
     sys.exit(0)
 
+def run_chrootuser(user, *args):
+  cmd = " ".join(args)
+  chroot_cmd = "/usr/bin/arch-chroot /mnt su " + user + "sh -c '" + cmd + "'"
+  r = os.WEXITSTATUS(os.system(chroot_cmd + " >> /mnt/install_log.txt 2>&1"))
+  if r != 0:
+    print("\n\nError running:", chroot_cmd)
+    sys.exit(0)
 
 def run_chroot(*args):
   chroot_cmd = ["/usr/bin/arch-chroot", "/mnt", *args]
@@ -381,7 +388,7 @@ if gnome:
     gnome_multimedia = False
 
 git_base = True
-q = request_input("Do you want to install Git and base-devel? [Yes]/No ")
+q = request_input("Do you want to install development packages? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   git_base = False
 
@@ -415,7 +422,7 @@ if gnome:
   print("{:>35}{:<1} {:<50}".format("Gnome utilities", ":", string_bool(gnome_utils)))
   print("{:>35}{:<1} {:<50}".format("Gnome multimedia applications", ":", string_bool(gnome_multimedia)))
 
-print("{:>35}{:<1} {:<50}".format("Git & base-devel", ":", string_bool(git_base)))
+print("{:>35}{:<1} {:<50}".format("Development packages", ":", string_bool(git_base)))
 print()
 confirm = request_input("Do you want to continue? Type 'YES': ")
 if confirm != "YES":
@@ -564,6 +571,11 @@ if use_zsh:
   copy_zsh_skel()
   print("Done")
 
+print_task("Installing Sudo")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
+run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
+print("Done")
+
 print_task("Setup root account")
 run_chroot("echo \"root:" + root_password + "\" | chpasswd")
 print("Done")
@@ -584,11 +596,6 @@ print("Done")
 
 print_task("Installing Vim")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim")
-print("Done")
-
-print_task("Installing Sudo")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
-run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
 print("Done")
 
 if yubi_key:
@@ -679,8 +686,19 @@ if gnome:
     print("Done")
 
 if git_base:
-  print_task("Installing git & base-devel")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel")
+  print_task("Installing development packages")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs npm")
+  print("Done")
+
+
+if yay:
+  print_task("Installing yay")
+  if not git_base:
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go")
+
+  run_chrootuser(user_name, "git", "clone", "https://aur.archlinux.org/yay.git", "~/yay")
+  run_chrootuser(user_name, "cd ~/yay", "&&", "echo " + user_password, "|", "makepkg -si --noconfirm -S")
+  run_chrootuser(user_name, "rm -rf ~/yay")
   print("Done")
 
 if disk != "None":
