@@ -307,7 +307,7 @@ def get_root_uuid():
   return uuid;
 
 cpu = detect_cpu()
-vga = detect_vga()
+vga = detect_vga().lower()
 
 clear()
 hostname = ask_hostname()
@@ -384,6 +384,11 @@ git_base = True
 q = request_input("Do you want to install Git and base-devel? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   git_base = False
+
+yay = True
+q = request_input("Do you want to install yay? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  yay = False
 
 clear()
 print("This script will install Arch Linux as follow:")
@@ -644,19 +649,19 @@ if gnome:
   print_task("Installing X.Org Server")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit")
   print("Done")
-  if vga == "Intel":
+  if vga == "intel":
     print_task("Installing Intel video drivers")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-intel")
     print("Done")
-  if vga == "Intel":
+  if vga == "nvidia":
     print_task("Installing Nvidia video drivers")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "nvidia-lts")
     print("Done")
-  if vga == "AMD":
+  if vga == "amd":
     print_task("Installing AMD/ATI video drivers")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-amdgpu")
     print("Done")
-  if vga == "Generic":
+  if vga == "generic":
     print_task("Installing Generic video drivers")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-fbdev xf86-video-vesa")
     print("Done")
