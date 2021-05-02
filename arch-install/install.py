@@ -206,7 +206,7 @@ def detect_cpu():
 
 def run_command(*args):
   cmd = " ".join(args)
-  r = os.WEXITSTATUS(os.system(cmd + " >/dev/null 2>&1"))
+  r = os.WEXITSTATUS(os.system(cmd + " >> /mnt/install_log.txt 2>&1"))
   if r != 0:
     print("\n\nError running:", cmd)
     sys.exit(0)
@@ -311,7 +311,36 @@ def get_crypt_uuid(disk):
 
 def get_root_uuid():
   uuid = os.popen("findmnt /mnt -o uuid | tail -n 1").readline().strip()
-  return uuid;
+  return uuid
+
+def hide_system_apps():
+  shell_script = """
+#!/usr/bin/env bash
+
+sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo )
+dir="/mnt/usr/share/applications"
+for app in ${sys_apps[@]}; do
+  file_name="$dir/$app.desktop"
+  echo -ne "Checking $app: "
+  if [ -f $file_name ]; then
+    var_hidden=$(cat $file_name | egrep -ohm1 "Hidden=(true|false)")
+    if [ -z $var_hidden ]; then
+      echo 'Hidden=true' >> $file_name
+      echo -ne "Set Hidden=true\\n"
+    else
+      sed -i -e 's/Hidden=.*/Hidden=true/g' $file_name
+      echo -ne "Update Hidden=true\\n"
+    fi
+  else
+    echo -ne "Skipping\\n"
+  fi
+done
+  """
+  with open("/tmp/hide_sys", "a") as f:
+    f.write(shell_script)
+  run_command("sh", "/tmp/hide_sys")
+  os.remove("/tmp/hide_sys")
+
 
 cpu = detect_cpu()
 vga = detect_vga().lower()
@@ -684,6 +713,7 @@ if gnome:
     print_task("Installing Gnome multimedia applications")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "evolution xvidcore x264 ffmpeg gst-libav totem rhythmbox")
     print("Done")
+  hide_system_apps()
 
 if git_base:
   print_task("Installing development packages")

@@ -9,10 +9,10 @@ gh() {
 }
 
 yk() {
-  if [[ -f /usr/lib/opensc-pkcs11 ]]; then
+  if [[ -f /usr/lib/opensc-pkcs11.so ]]; then
     ssh-add -s /usr/lib/opensc-pkcs11.so
   fi
-  if [[ -f /usr/local/lib/opensc-pkcs11 ]]; then
+  if [[ -f /usr/local/lib/opensc-pkcs11.so ]]; then
     ssh-add -s /usr/local/lib/opensc-pkcs11.so
   fi
 }
