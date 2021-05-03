@@ -9,11 +9,16 @@ gh() {
 }
 
 yk() {
-  if [[ -f /usr/lib/opensc-pkcs11.so ]]; then
-    ssh-add -s /usr/lib/opensc-pkcs11.so
+  SO_PATH=""
+  if [[ -f "/usr/lib/opensc-pkcs11.so" ]]; then
+    SO_PATH="/usr/lib/opensc-pkcs11.so"
+  elif [[ -f "/usr/local/lib/opensc-pkcs11.so" ]]; then
+    SO_PATH="/usr/local/lib/opensc-pkcs11.so"
   fi
-  if [[ -f /usr/local/lib/opensc-pkcs11.so ]]; then
-    ssh-add -s /usr/local/lib/opensc-pkcs11.so
+  if [[ $1 == "e" ]]; then
+    ssh-add -e $SO_PATH
+  else
+    ssh-add -s $SO_PATH
   fi
 }
 
