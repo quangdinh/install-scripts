@@ -206,7 +206,7 @@ def detect_cpu():
 
 def run_command(*args):
   cmd = " ".join(args)
-  r = os.WEXITSTATUS(os.system(cmd + " >> /mnt/install_log.txt 2>&1"))
+  r = os.WEXITSTATUS(os.system("sh -c '" + cmd + "' >> /mnt/install_log.txt 2>&1"))
   if r != 0:
     print("\n\nError running:", cmd)
     sys.exit(0)
@@ -507,10 +507,10 @@ if disk != "None":
   if encrypt:
     cryptpartition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="cryptlvm"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
     print_task("Encrypting LUKS partition to cryptlvm")
-    run_command("echo", encrypt_password, "|", "cryptsetup -q luksFormat", cryptpartition)
+    run_command("echo \"" + encrypt_password + "\" |", "cryptsetup -q luksFormat", cryptpartition)
     print("Done")
     print_task("Opening LUKS partition to cryptlvm")
-    run_command("echo", encrypt_password, "|", "cryptsetup luksOpen", cryptpartition, "cryptlvm")
+    run_command("echo \"" + encrypt_password + "\" |", "cryptsetup luksOpen", cryptpartition, "cryptlvm")
     print("Done")
 
     print_task("Creating LVM inside LUKS")
@@ -589,7 +589,7 @@ print("Done")
 
 print_task("Setup hostname")
 run_chroot("echo", hostname, ">", "/etc/hostname")
-run_chroot("echo", "-e", '127.0.0.1\\tlocalhost\\n::1\\tlocalhost\\n127.0.1.1\\t' + hostname + '.local ' + hostname, ">", "/etc/hosts")
+run_chroot("echo", "-e", '"127.0.0.1\\tlocalhost\\n::1\\tlocalhost\\n127.0.1.1\\t' + hostname + '.local ' + hostname, "\" >", "/etc/hosts")
 print("Done")
 
 if use_zsh:
@@ -739,7 +739,7 @@ if disk != "None":
     else:
       partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="swap"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
     run_command("/usr/bin/swapoff", partition)
-  run_command("/usr/bin/umount", "-R", "/mnt")
+  os.popen("/usr/bin/umount -R /mnt")
   if encrypt:
     run_command("/usr/bin/cryptsetup", "luksClose", "VolGroup0-lvRoot")
     run_command("/usr/bin/cryptsetup", "luksClose", "VolGroup0-lvSwap")
