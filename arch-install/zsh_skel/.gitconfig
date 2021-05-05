@@ -21,6 +21,10 @@
   bclean = "!f() { DEFAULT=$(git default); git branch --merged ${1-$DEFAULT} | grep -v " ${1-$DEFAULT}$" | xargs git branch -d; }; f"
   bdone = "!f() { DEFAULT=$(git default); git checkout ${1-$DEFAULT} && git up && git bclean ${1-$DEFAULT}; }; f"
   discard = checkout -- 
+  tup = !git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/* && git fetch
+  bup = !git branch -u origin/$(git branch-name) 
+  ntree = worktree add
+  rtree = worktree remove
+  ptree = worktree prune
 [pull]
 	ff = only
-
