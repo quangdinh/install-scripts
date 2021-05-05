@@ -1,5 +1,8 @@
 pm() {
-  sudo pacman $@
+  if command -v pacman &> /dev/null
+  then
+      sudo pacman $@
+  fi
 }
 
 gh() {

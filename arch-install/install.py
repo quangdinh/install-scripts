@@ -730,6 +730,8 @@ if yay:
   run_chrootuser(user_name, "cd ~/yay", "&&", "makepkg -s --noconfirm")
   run_chroot("/usr/bin/pacman", "-U --noconfirm", "/home/" + user_name + "/yay/yay*.pkg.tar.zst")
   run_chrootuser(user_name, "rm -rf ~/yay")
+  run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
+  run_chroot("chown -r", user_name+":"user_name, "/home/" + user_name + "/after_install")
   print("Done")
 
 if disk != "None":

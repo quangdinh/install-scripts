@@ -2,7 +2,7 @@ export TERM=xterm-256color
 export EDITOR=/usr/bin/vim
 export CURL_SSL_BACKEND=secure-transport
 export GOPATH="$HOME/go"
-
+export GPG_TTY=$(tty)
 export PATH=$PATH:$GOPATH/bin
 
 go_paths=(
