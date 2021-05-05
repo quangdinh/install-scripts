@@ -232,7 +232,7 @@ def print_task(task):
   print("{:<40}{:<1}".format(task, ": "), end='', flush=True)
 
 def ask_zsh():
-  zsh = request_input("Do you want to switch shell to ZSH? [Yes] ")
+  zsh = request_input("Do you want to switch shell to ZSH? [Yes]/No ")
   if zsh.lower() == "yes" or zsh.lower() == "y" or zsh == "":
     return True
   return False
@@ -675,7 +675,6 @@ print_task("Setup Grub")
 if hide_grub:
   run_chroot("sed", "-i -e", "'s/GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/g'", "/etc/default/grub")
 
-run_chroot("sed", "-i -e", "'s/GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR=\\\"Arch Linux\\\"/g'", "/etc/default/grub")
 run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/efi")
 
 run_chroot("/usr/bin/grub-mkconfig", "-o", "/boot/grub/grub.cfg")
@@ -731,7 +730,7 @@ if yay:
   run_chroot("/usr/bin/pacman", "-U --noconfirm", "/home/" + user_name + "/yay/yay*.pkg.tar.zst")
   run_chrootuser(user_name, "rm -rf ~/yay")
   run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
-  run_chroot("chown -r", user_name+":"+user_name, "/home/" + user_name + "/after_install")
+  run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
   print("Done")
 
 if disk != "None":
