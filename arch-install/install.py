@@ -653,8 +653,8 @@ if cpu == "intel":
 if disk != "None":
   partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="EFI"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
   print_task("Mounting EFI")
-  run_chroot("/usr/bin/mkdir", "-p", "/boot/efi")
-  run_chroot("/usr/bin/mount", partition, "/boot/efi")
+  run_chroot("/usr/bin/mkdir", "-p", "/efi")
+  run_chroot("/usr/bin/mount", partition, "/efi")
   print("Done")
 
 print_task("Installing boot manager")
@@ -676,7 +676,8 @@ print_task("Setup Grub")
 if hide_grub:
   run_chroot("sed", "-i -e", "'s/GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/g'", "/etc/default/grub")
 
-run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB")
+run_chroot("sed", "-i -e", "'s/GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR=\"Arch Linux\"/g'", "/etc/default/grub")
+run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/efi")
 
 run_chroot("/usr/bin/grub-mkconfig", "-o", "/boot/grub/grub.cfg")
 print("Done")
