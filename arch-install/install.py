@@ -742,8 +742,8 @@ if disk != "None":
     run_command("/usr/bin/swapoff", partition)
   os.popen("/usr/bin/umount -R /mnt")
   if encrypt:
-    run_command("/usr/bin/cryptsetup", "luksClose", "VolGroup0-lvRoot")
-    run_command("/usr/bin/cryptsetup", "luksClose", "VolGroup0-lvSwap")
-    run_command("/usr/bin/cryptsetup", "luksClose", "cryptlvm")
+    os.popen("/usr/bin/cryptsetup luksClose VolGroup0-lvRoot")
+    os.popen("/usr/bin/cryptsetup luksClose VolGroup0-lvSwap")
+    os.popen("/usr/bin/cryptsetup luksClose cryptlvm")
 
 print("Arch installation is ready. Please reboot and remove the USB drive")

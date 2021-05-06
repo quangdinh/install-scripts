@@ -128,7 +128,7 @@ precmd() {
         git_status=""
       fi
     fi
-    git_prompt="%B%F{cyan}(%F{cyan}%b$branch_sha$git_status$aheadbehind%B%F{cyan})%f%b"
+    git_prompt="%B%F{cyan}(%F{cyan}$branch_sha$git_status$aheadbehind%F{cyan})%f%b"
   fi
   if [ "true" = "$bare_repo" ]; then
     git_prompt="%B%F{cyan}(%F{cyan}%b[bare]%B%F{cyan})%f%b"
