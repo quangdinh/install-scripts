@@ -1,10 +1,10 @@
 pm() {
   if command -v pacman &> /dev/null; then
-    if [ $1 = 'check' ]; then
+    if [ "$1" = "check" ]; then
     pacman -Qtdq
       return
     fi
-    if [ $1 = 'clean' ]; then
+    if [ "$1" = "clean" ]; then
       pacman -Qtdq | sudo pacman -Rns -
       return
     fi
@@ -13,7 +13,7 @@ pm() {
 }
 
 gh() {
-  if [ $1 = 'bare' ]; then
+  if [ "$1" = "bare" ]; then
     if [[ ! -z $2 ]]; then
       paths=("${(@s|/|)2}")
       if [ ${#paths} -eq 2 ]; then
@@ -37,7 +37,7 @@ yk() {
   elif [[ -f "/usr/local/lib/opensc-pkcs11.so" ]]; then
     SO_PATH="/usr/local/lib/opensc-pkcs11.so"
   fi
-  if [ $1 = "e" ]; then
+  if [ "$1" = "e" ]; then
     ssh-add -e $SO_PATH
   else
     ssh-add -s $SO_PATH
