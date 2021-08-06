@@ -710,7 +710,7 @@ if gnome:
     print("Done")
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "evolution xvidcore x264 ffmpeg gst-libav totem rhythmbox")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-calendar geary xvidcore x264 ffmpeg gst-libav totem rhythmbox")
     print("Done")
   hide_system_apps()
 
