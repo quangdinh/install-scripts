@@ -664,17 +664,15 @@ if disk != "None" and encrypt:
   run_chroot("/usr/bin/mkinitcpio", "-P")
   cryptuuid = get_crypt_uuid(disk)
   rootuuid = get_root_uuid()
-  run_chroot("/usr/bin/sed", "-i -e", '"s/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\\"loglevel=3 quiet cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + '\\"/g"', "/etc/default/grub")
+  run_chroot("/usr/bin/sed", "-i -e", '"s/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\\"quiet loglevel=3 rd.systemd.show_status=auto rd.udev.log_level=3 loglevel=3 vga=current splash cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + '\\"/g"', "/etc/default/grub")
   print("Done")
 
 print_task("Setup Grub")
 if hide_grub:
   run_chroot("sed", "-i -e", "'s/GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/g'", "/etc/default/grub")
 
-run_chroot("sed", "-i -e", "'s/GRUB_DISTRIBUTOR=.*/#/g'", "/etc/default/grub")
-run_chroot("echo \"GRUB_DISTRIBUTOR=Arch Linux\" >> /etc/default/grub")
-run_chroot("/usr/bin/grub-mkconfig", "-o", "/boot/grub/grub.cfg")
 run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/efi")
+run_chroot("/usr/bin/grub-mkconfig", "-o", "/boot/grub/grub.cfg")
 print("Done")
 
 if gnome:
@@ -703,7 +701,7 @@ if gnome:
   print("Done")
   if gnome_utils:
     print_task("Installing Gnome utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor gnome-terminal nautilus sushi gnome-tweaks ttf-droid gnome-calculator xf86-input-wacom gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc gvfs-goa gvfs-google")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor gnome-terminal nautilus sushi gnome-tweaks ttf-droid gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc gvfs-goa gvfs-google")
     print("Done")
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
@@ -742,6 +740,7 @@ if disk != "None":
   if encrypt:
     os.popen("/usr/bin/cryptsetup luksClose VolGroup0-lvRoot")
     os.popen("/usr/bin/cryptsetup luksClose VolGroup0-lvSwap")
+    time.sleep(1)
     os.popen("/usr/bin/cryptsetup luksClose cryptlvm")
 
 print("Arch installation is ready. Please reboot and remove the USB drive")
