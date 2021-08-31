@@ -671,9 +671,10 @@ print_task("Setup Grub")
 if hide_grub:
   run_chroot("sed", "-i -e", "'s/GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/g'", "/etc/default/grub")
 
-run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/efi")
-
+run_chroot("sed", "-i -e", "'s/GRUB_DISTRIBUTOR=.*/#/g'", "/etc/default/grub")
+run_chroot("echo \GRUB_DISTRIBUTOR=Arch Linux\" >> /etc/default/grub")
 run_chroot("/usr/bin/grub-mkconfig", "-o", "/boot/grub/grub.cfg")
+run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/efi")
 print("Done")
 
 if gnome:
