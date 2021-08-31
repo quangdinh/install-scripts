@@ -672,8 +672,6 @@ if hide_grub:
   run_chroot("sed", "-i -e", "'s/GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/g'", "/etc/default/grub")
 
 run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/efi --removable")
-if disk != "None":
-  run_chroot("/usr/bin/efibootmgr", '--create --disk ' + disk + ' --part 1 --label "Arch Linux" -l "\EFI\arch\grubx64.efi"')
 run_chroot("/usr/bin/grub-mkconfig", "-o", "/boot/grub/grub.cfg")
 print("Done")
 
@@ -708,6 +706,7 @@ if gnome:
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-calendar geary xvidcore x264 ffmpeg gst-libav totem rhythmbox")
+    run_chrootuser(user_name, "gio mime text/calendar org.gnome.Calendar.desktop")
     print("Done")
   hide_system_apps()
 

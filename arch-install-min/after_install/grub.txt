@@ -1,1 +1,0 @@
-efibootmgr --create --disk /dev/nvme0n1 --part 1 --label "Arch Linux" -l "\EFI\arch\grubx64.efi"
