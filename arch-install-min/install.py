@@ -272,16 +272,21 @@ def parse_hooks_encrypt_lvm(encrypt, plymouth):
     keyboardHook = "udev"
 
   for hook in hooks:
-    if hook == "udev":
+    if hook == "udev" and hook != keyboardHook:
       if plymouth:
+        results.append("udev")
         results.append("plymouth")
         if encrypt:
           results.append("plymouth-encrypt")
-
+        continue
 
     if hook == keyboardHook:
       results.append(hook)
       results.append("keyboard")
+      if plymouth and hook == "udev":
+        results.append("plymouth")
+        if encrypt:
+          results.append("plymouth-encrypt")
       continue
 
     if hook == "keyboard" or hook == "encrypt" or hook == "plymouth" or hook == "plymouth-encrypt" or hook == "lvm2":
