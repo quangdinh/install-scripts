@@ -655,6 +655,12 @@ if disk != "None" and encrypt:
 
 hooks = parse_hooks_encrypt_lvm(encrypt, plymouth)
 
+if vga == "intel":
+  run_chroot("/usr/bin/sed", "-i -e", "\"s/MODULES=(.*)/MODULES=(i915)/g\"", "/etc/mkinitcpio.conf")
+
+if vga == "amd":
+  run_chroot("/usr/bin/sed", "-i -e", "\"s/MODULES=(.*)/MODULES=(amdgpu)/g\"", "/etc/mkinitcpio.conf")
+
 if encrypt or plymouth:
   run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
 
@@ -663,11 +669,14 @@ run_chroot("/usr/bin/mkinitcpio", "-P")
 if disk != "None":
   rootuuid = get_root_uuid()
   cpucode = get_cpu_code(cpu)
-  cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=false rd.udev.log_priority=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+  cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
 
   if encrypt:
     cryptuuid = get_crypt_uuid(disk)
-    cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=false rd.udev.log_priority=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+    cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+
+  if vga == "intel":
+    cmdLine = cmdLine + ' i915.fastboot=1'
 
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
