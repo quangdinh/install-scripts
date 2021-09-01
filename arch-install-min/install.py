@@ -673,7 +673,7 @@ if disk != "None":
 
   if encrypt:
     cryptuuid = get_crypt_uuid(disk)
-    cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+    cmdLine = '"loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
 
   if vga == "intel":
     cmdLine = cmdLine + ' i915.fastboot=1'
