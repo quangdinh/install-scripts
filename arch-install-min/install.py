@@ -647,8 +647,8 @@ if cpu == "Intel":
 
 if plymouth:
   print_task("Installing Plymouth")
-  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-git-0.9.5-x86_64.pkg.tar.zst", "-o", "/plymouth.pkg.tar.zst")
-  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-theme-arch-glow-167535-1-any.pkg.tar.zst", "-o", "/plymouth-theme-arch-glow-167535-1-any.pkg.tar.zst")
+  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-git.pkg.tar.zst", "-o", "/plymouth-git.pkg.tar.zst")
+  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-theme-arch-glow.pkg.tar.zst", "-o", "/plymouth-theme-arch-glow.pkg.tar.zst")
   run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
   run_chroot("rm", "-rf", "/*.pkg.tar.zst")
   run_chroot("/usr/bin/plymouth-set-default-theme", "-R", "arch-glow")
@@ -741,8 +741,8 @@ if gnome:
   print_task("Installing Gnome")
 
   if plymouth:
-    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/gdm-plymouth-40.1-1-x86_64.pkg.tar.zst", "-o", "/gdm-plymouth-40.1-1-x86_64.pkg.tar.zst")
-    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/libgdm-plymouth-40.1-1-x86_64.pkg.tar.zst", "-o", "/libgdm-plymouth-40.1-1-x86_64.pkg.tar.zst")
+    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/gdm-plymouth.pkg.tar.zst", "-o", "/gdm-plymouth.pkg.tar.zst")
+    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/libgdm-plymouth.pkg.tar.zst", "-o", "/libgdm-plymouth.pkg.tar.zst")
     run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
     run_chroot("rm", "-rf", "/*.pkg.tar.zst")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware")
