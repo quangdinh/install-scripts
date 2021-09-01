@@ -714,12 +714,9 @@ if cpu == "Intel":
   print("Done")
 
 if plymouth:
-  if not git_base and not yay:
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel")
-  run_chrootuser(user_name, "git", "clone", "https://aur.archlinux.org/plymouth-git.git", "~/plymouth")
-  run_chrootuser(user_name, "cd ~/plymouth", "&&", "makepkg -s --noconfirm")
-  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/home/" + user_name + "/plymouth/plymouth*.pkg.tar.zst")
-  run_chrootuser(user_name, "rm -rf ~/plymouth")
+  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-git-0.9.5-x86_64.pkg.tar.zst", "-o", "/plymouth.pkg.tar.zst")
+  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/plymouth.pkg.tar.zst")
+  run_chroot("rm", "-rf", "/plymouth.pkg.tar.zst")
   run_chroot("/usr/bin/plymouth-set-default-theme", "-R", "bgrt")
 
 if disk != "None" and encrypt:
