@@ -404,7 +404,7 @@ user_name = ask_username()
 user_label = request_input("User fullname: ")
 user_password = ask_password()
 
-
+clear()
 plymouth = True
 q = request_input("Do you want to use Plymouth? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
@@ -476,8 +476,6 @@ confirm = request_input("Do you want to continue? Type 'YES': ")
 if confirm != "YES":
   print("Exiting")
   sys.exit(0)
-
-hooks = parse_hooks_encrypt_lvm(encrypt, plymouth)
 
 print()
 print("Installing Arch Linux")
@@ -729,16 +727,22 @@ if disk != "None" and encrypt:
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "lvm2")
   print("Done")
 
+hooks = parse_hooks_encrypt_lvm(encrypt, plymouth)
+
 if encrypt or plymouth:
   run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
 
 run_chroot("/usr/bin/mkinitcpio", "-P")
 
 if disk != "None":
-  cryptuuid = get_crypt_uuid(disk)
   rootuuid = get_root_uuid()
   cpucode = get_cpu_code(cpu)
-  cmdLine = 'quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
+  cmdLine = 'quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
+
+  if encrypt:
+    cryptuuid = get_crypt_uuid(disk)
+    cmdLine = 'quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
+    
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
   print("Done")
