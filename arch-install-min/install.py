@@ -742,12 +742,12 @@ if disk != "None":
   if encrypt:
     cryptuuid = get_crypt_uuid(disk)
     cmdLine = 'quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
-    
+
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
   print("Done")
   print_task("Setup bootloader")
-  run_chroot("/usr/bin/efibootmgr", "--create", "--disk", disk, "--part 1", "--label 'Arch Linux'", "--loader", "/vmlinuz-linux-lts", "--unicode", "'" + cmdLine + "'")
+  run_chroot("/usr/bin/efibootmgr", "--create", "--disk", disk, "--part 1", "--label \"Arch Linux\"", "--loader", "/vmlinuz-linux-lts", "--unicode", "'" + cmdLine + "'", "--verbose")
   print("Done")
 
 
