@@ -272,12 +272,15 @@ def parse_hooks_encrypt_lvm(encrypt, plymouth):
     keyboardHook = "udev"
 
   for hook in hooks:
-    if hook == keyboardHook:
-      results.append(hook)
+    if hook == "udev":
       if plymouth:
         results.append("plymouth")
         if encrypt:
           results.append("plymouth-encrypt")
+
+
+    if hook == keyboardHook:
+      results.append(hook)
       results.append("keyboard")
       continue
 
@@ -627,6 +630,53 @@ print_task("Installing kernel")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "linux-lts linux-firmware")
 print("Done")
 
+if cpu == "AMD":
+  print_task("Installing AMD microcode")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "amd-ucode")
+  print("Done")
+
+if cpu == "Intel":
+  print_task("Installing Intel microcode")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "intel-ucode")
+  print("Done")
+
+if plymouth:
+  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-git-0.9.5-x86_64.pkg.tar.zst", "-o", "/plymouth.pkg.tar.zst")
+  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/plymouth.pkg.tar.zst")
+  run_chroot("rm", "-rf", "/plymouth.pkg.tar.zst")
+  run_chroot("/usr/bin/plymouth-set-default-theme", "-R", "bgrt")
+
+if disk != "None" and encrypt:
+  print_task("Install LVM2 and configure encryption")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "lvm2")
+  print("Done")
+
+hooks = parse_hooks_encrypt_lvm(encrypt, plymouth)
+
+if encrypt or plymouth:
+  run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
+
+run_chroot("/usr/bin/mkinitcpio", "-P")
+
+if disk != "None":
+  rootuuid = get_root_uuid()
+  cpucode = get_cpu_code(cpu)
+  cmdLine = '"quiet loglevel=3 vga=current splash vt.global_cursor_default=0 rd.systemd.show_status=auto rd.udev.log_level=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+
+  if encrypt:
+    cryptuuid = get_crypt_uuid(disk)
+    cmdLine = '"quiet loglevel=3 vga=current splash vt.global_cursor_default=0 rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+
+  print_task("Installing boot manager")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
+  print("Done")
+  print_task("Setup bootloader")
+  efiboot = os.popen('efibootmgr | grep "Arch Linux" | grep -oP "[0-9]+"').readline().strip()
+  if efiboot != "":
+    run_chroot("/usr/bin/efibootmgr", "-Bb", efiboot)
+  run_chroot("/usr/bin/efibootmgr", "--create", "--disk", disk, "--part 1", "--label \"Arch Linux\"", "--loader", "/vmlinuz-linux-lts", "--unicode",  cmdLine, "--verbose")
+  print("Done")
+
 print_task("Installing NetworkManager")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "networkmanager")
 run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
@@ -669,7 +719,16 @@ if gnome:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-fbdev xf86-video-vesa")
     print("Done")
   print_task("Installing Gnome")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware")
+
+  if plymouth:
+    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/gdm-plymouth-40.1-1-x86_64.pkg.tar.zst", "-o", "/gdm-plymouth-40.1-1-x86_64.pkg.tar.zst")
+    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/libgdm-plymouth-40.1-1-x86_64.pkg.tar.zst", "-o", "/libgdm-plymouth-40.1-1-x86_64.pkg.tar.zst")
+    run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
+    run_chroot("rm", "-rf", "/*.pkg.tar.zst")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware")
+  else:
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware")
+
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
   if gnome_utils:
@@ -701,52 +760,6 @@ if yay:
   run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
   run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
   print("Done")
-
-
-if cpu == "AMD":
-  print_task("Installing AMD microcode")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "amd-ucode")
-  print("Done")
-
-if cpu == "Intel":
-  print_task("Installing Intel microcode")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "intel-ucode")
-  print("Done")
-
-if plymouth:
-  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-git-0.9.5-x86_64.pkg.tar.zst", "-o", "/plymouth.pkg.tar.zst")
-  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/plymouth.pkg.tar.zst")
-  run_chroot("rm", "-rf", "/plymouth.pkg.tar.zst")
-  run_chroot("/usr/bin/plymouth-set-default-theme", "-R", "bgrt")
-
-if disk != "None" and encrypt:
-  print_task("Install LVM2 and configure encryption")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "lvm2")
-  print("Done")
-
-hooks = parse_hooks_encrypt_lvm(encrypt, plymouth)
-
-if encrypt or plymouth:
-  run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
-
-run_chroot("/usr/bin/mkinitcpio", "-P")
-
-if disk != "None":
-  rootuuid = get_root_uuid()
-  cpucode = get_cpu_code(cpu)
-  cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
-
-  if encrypt:
-    cryptuuid = get_crypt_uuid(disk)
-    cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
-
-  print_task("Installing boot manager")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
-  print("Done")
-  print_task("Setup bootloader")
-  run_chroot("/usr/bin/efibootmgr", "--create", "--disk", disk, "--part 1", "--label \"Arch Linux\"", "--loader", "/vmlinuz-linux-lts", "--unicode",  cmdLine, "--verbose")
-  print("Done")
-
 
 if disk != "None":
   if int(swap) > 0:
