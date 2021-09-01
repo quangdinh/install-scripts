@@ -260,7 +260,7 @@ def ask_hide_grub():
     return True
   return False
 
-def parse_hooks_encrypt_lvm():
+def parse_hooks_encrypt_lvm(encrypt, plymouth):
   current_hooks = os.popen("cat /mnt/etc/mkinitcpio.conf | grep -oP '^HOOKS=(\(.*\))$'").readline().strip()
   objects = re.search('\((.*)\)', current_hooks)
   hooks = []
@@ -274,15 +274,21 @@ def parse_hooks_encrypt_lvm():
   for hook in hooks:
     if hook == keyboardHook:
       results.append(hook)
+      if plymouth:
+        results.append("plymouth")
+        if encrypt:
+          results.append("plymouth-encrypt")
       results.append("keyboard")
       continue
 
-    if hook == "keyboard" or hook == "encrypt" or hook == "lvm2":
+    if hook == "keyboard" or hook == "encrypt" or hook == "plymouth" or hook == "plymouth-encrypt" or hook == "lvm2":
       continue
 
     if hook == "filesystems":
-      results.append("encrypt")
-      results.append("lvm2")
+      if encrypt:
+        if not plymouth:
+          results.append("encrypt")
+        results.append("lvm2")
       results.append(hook)
       continue
 
@@ -319,9 +325,9 @@ def get_root_uuid():
 
 def get_cpu_code(cpu):
   if cpu == "Intel":
-    return "initrd=\intel-ucode.img "
+    return "initrd=/intel-ucode.img "
   if cpu == "AMD":
-    return "initrd=\\amd-ucode.img "
+    return "initrd=/amd-ucode.img "
   return ""
 
 def hide_system_apps():
@@ -398,8 +404,13 @@ user_name = ask_username()
 user_label = request_input("User fullname: ")
 user_password = ask_password()
 
-clear()
 
+plymouth = True
+q = request_input("Do you want to use Plymouth? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  plymouth = False
+
+clear()
 yubi_key = True
 q = request_input("Do you want to use Yubikey? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
@@ -451,6 +462,7 @@ print("{:>35}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_l
 print("{:>35}{:<1} {:<50}".format("Timezone", ":", timezone))
 print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
 print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
+print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
 print("{:>35}{:<1} {:<50}".format("Gnome", ":", string_bool(gnome)))
@@ -465,6 +477,7 @@ if confirm != "YES":
   print("Exiting")
   sys.exit(0)
 
+hooks = parse_hooks_encrypt_lvm(encrypt, plymouth)
 
 print()
 print("Installing Arch Linux")
@@ -542,7 +555,6 @@ if disk != "None":
     partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="root"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
     run_command("/usr/bin/mkfs.ext4", partition)
     print("Done")
-
 
 
   if encrypt:
@@ -638,38 +650,6 @@ if bluetooth:
   run_chroot("/usr/bin/systemctl", "enable", "bluetooth")
   print("Done")
 
-if cpu == "AMD":
-  print_task("Installing AMD microcode")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "amd-ucode")
-  print("Done")
-
-if cpu == "Intel":
-  print_task("Installing Intel microcode")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "intel-ucode")
-  print("Done")
-
-
-if disk != "None" and encrypt:
-  print_task("Install LVM2 and configure encryption")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "lvm2")
-  hooks = parse_hooks_encrypt_lvm()
-  run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
-  run_chroot("/usr/bin/mkinitcpio", "-P")
-  print("Done")
-
-
-if disk != "None":
-  cryptdev = get_crypt_dev(disk)
-  rootuuid = get_root_uuid()
-  cpucode = get_cpu_code(cpu)
-  cmdLine = 'quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=' + cryptdev + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=\initramfs-linux-lts.img'
-  print_task("Installing boot manager")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
-  print("Done")
-  print_task("Setup bootloader")
-  run_chroot("/usr/bin/efibootmgr", "--create", "--disk", disk, "--part 1", "--label 'Arch Linux'", "--loader", "/vmlinuz-linux-lts", "--unicode", cmdLine)
-  print("Done")
-
 if gnome:
   print_task("Installing X.Org Server")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit")
@@ -723,6 +703,49 @@ if yay:
   run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
   run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
   print("Done")
+
+
+if cpu == "AMD":
+  print_task("Installing AMD microcode")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "amd-ucode")
+  print("Done")
+
+if cpu == "Intel":
+  print_task("Installing Intel microcode")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "intel-ucode")
+  print("Done")
+
+if plymouth:
+  if not git_base and not yay:
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel")
+  run_chrootuser(user_name, "git", "clone", "https://aur.archlinux.org/plymouth-git.git", "~/plymouth")
+  run_chrootuser(user_name, "cd ~/plymouth", "&&", "makepkg -s --noconfirm")
+  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/home/" + user_name + "/plymouth/plymouth*.pkg.tar.zst")
+  run_chrootuser(user_name, "rm -rf ~/plymouth")
+  run_chroot("/usr/bin/plymouth-set-default-theme", "-R", "bgrt")
+
+if disk != "None" and encrypt:
+  print_task("Install LVM2 and configure encryption")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "lvm2")
+  print("Done")
+
+if encrypt or plymouth:
+  run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
+
+run_chroot("/usr/bin/mkinitcpio", "-P")
+
+if disk != "None":
+  cryptuuid = get_crypt_uuid(disk)
+  rootuuid = get_root_uuid()
+  cpucode = get_cpu_code(cpu)
+  cmdLine = 'quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
+  print_task("Installing boot manager")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
+  print("Done")
+  print_task("Setup bootloader")
+  run_chroot("/usr/bin/efibootmgr", "--create", "--disk", disk, "--part 1", "--label 'Arch Linux'", "--loader", "/vmlinuz-linux-lts", "--unicode", "'" + cmdLine + "'")
+  print("Done")
+
 
 if disk != "None":
   if int(swap) > 0:
