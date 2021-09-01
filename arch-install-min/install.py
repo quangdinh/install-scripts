@@ -641,10 +641,12 @@ if cpu == "Intel":
   print("Done")
 
 if plymouth:
+  print_task("Installing Plymouth")
   run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-git-0.9.5-x86_64.pkg.tar.zst", "-o", "/plymouth.pkg.tar.zst")
   run_chroot("/usr/bin/pacman", "-U --noconfirm", "/plymouth.pkg.tar.zst")
   run_chroot("rm", "-rf", "/plymouth.pkg.tar.zst")
   run_chroot("/usr/bin/plymouth-set-default-theme", "-R", "bgrt")
+  print("Done")
 
 if disk != "None" and encrypt:
   print_task("Install LVM2 and configure encryption")
@@ -661,11 +663,11 @@ run_chroot("/usr/bin/mkinitcpio", "-P")
 if disk != "None":
   rootuuid = get_root_uuid()
   cpucode = get_cpu_code(cpu)
-  cmdLine = '"quiet loglevel=3 vga=current splash vt.global_cursor_default=0 rd.systemd.show_status=auto rd.udev.log_level=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+  cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=false rd.udev.log_priority=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
 
   if encrypt:
     cryptuuid = get_crypt_uuid(disk)
-    cmdLine = '"quiet loglevel=3 vga=current splash vt.global_cursor_default=0 rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+    cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=false rd.udev.log_priority=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
 
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
