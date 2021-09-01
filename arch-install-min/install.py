@@ -673,15 +673,16 @@ run_chroot("/usr/bin/mkinitcpio", "-P")
 
 if disk != "None":
   rootuuid = get_root_uuid()
+  cmdLineExtra = ""
+  if vga == "intel":
+    cmdLineExtra = ' i915.fastboot=1'
+
   cpucode = get_cpu_code(cpu)
-  cmdLine = '"quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
+  cmdLine = '"quiet loglevel=3 vga=current splash' + cmdLineExtra +' rd.systemd.show_status=auto rd.udev.log_level=3 root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
 
   if encrypt:
     cryptuuid = get_crypt_uuid(disk)
-    cmdLine = '"loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
-
-  if vga == "intel":
-    cmdLine = cmdLine + ' i915.fastboot=1'
+    cmdLine = '"loglevel=3 vga=current splash' + cmdLineExtra +' rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img"'
 
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
