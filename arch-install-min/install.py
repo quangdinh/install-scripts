@@ -50,7 +50,7 @@ def list_disk():
       valid_disks.append(dev)
       print("{:<2} {:<20} {:<10}".format(len(valid_disks), "/dev/" + dev["name"], dev["size"]))
 
-  print("x  Don't partition, I have already mounted everything at /mnt")
+  print("x  Don't partition, I have already mounted everything at /mnt and will install bootloader myself")
   print()
   return valid_disks
 
@@ -198,10 +198,10 @@ def ask_swap():
   return ask_swap()
 
 def detect_cpu():
-  c = os.popen('cat /proc/cpuinfo | grep -o -m1 "AuthenticAMD\|GenuineIntel"').readline().strip()
-  if c == "AuthenticAMD":
+  c = os.popen('cat /proc/cpuinfo | grep -o -m1 "AMD\|Intel"').readline().strip()
+  if c == "AMD":
     return "AMD"
-  if c == "GenuineIntel":
+  if c == "Intel":
     return "Intel"
   return "None"
 
@@ -306,9 +306,23 @@ def get_crypt_uuid(disk):
   uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
   return uuid
 
+def get_crypt_dev(disk):
+  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="cryptlvm"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+  if partition == "":
+    print("Error! Cryptlvm not found")
+    sys.exit(0)
+  return partition
+
 def get_root_uuid():
   uuid = os.popen("findmnt /mnt -o uuid | tail -n 1").readline().strip()
   return uuid
+
+def get_cpu_code(cpu):
+  if cpu == "Intel":
+    return "initrd=\intel-ucode.img "
+  if cpu == "AMD":
+    return "initrd=\\amd-ucode.img "
+  return ""
 
 def hide_system_apps():
   shell_script = """
@@ -362,9 +376,6 @@ if disk != "None":
     cryptroot = "/dev/mapper/cryptlvm"
   clear()
   swap = ask_swap()
-
-clear()
-hide_grub = ask_hide_grub()
 
 clear()
 timezone = ask_timezone()
@@ -463,11 +474,8 @@ if disk != "None":
   print_task("Setup new partition scheme")
   run_command("/usr/bin/sgdisk", "--zap-all", disk)
   print("Done")
-  print_task("Creating EFI partition")
-  run_command("/usr/bin/sgdisk", "-n 0:0:+256M -t 0:ef00 -c 0:EFI", disk)
-  print("Done")
-  print_task("Creating Boot partition")
-  run_command("/usr/bin/sgdisk", "-n 0:0:+512M -t 0:8300 -c 0:boot", disk)
+  print_task("Creating EPS partition")
+  run_command("/usr/bin/sgdisk", "-n 0:0:+512M -t 0:ef00 -c 0:EPS", disk)
   print("Done")
   if encrypt:
     print_task("Creating LUKS partition")
@@ -491,14 +499,10 @@ if disk != "None":
     run_command("/usr/bin/swapon", partition)
     print("Done")
 
-  print_task("Formatting EFI partition")
-  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="EFI"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+  print_task("Formatting EPS partition")
+  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="EPS"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
   run_command("/usr/bin/mkfs.fat", "-F32", partition)
   print("Done")  
-  print_task("Formatting EFI partition")
-  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="boot"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-  run_command("/usr/bin/mkfs.ext4", partition)
-  print("Done")
 
   if encrypt:
     cryptpartition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="cryptlvm"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
@@ -549,8 +553,8 @@ if disk != "None":
   print_task("Mounting root")
   run_command("/usr/bin/mount", partition, "/mnt")
   print("Done")
-  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="boot"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-  print_task("Mounting boot")
+  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="EPS"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+  print_task("Mounting EPS")
   run_command("/usr/bin/mkdir", "-p", "/mnt/boot")
   run_command("/usr/bin/mount", partition, "/mnt/boot")
   print("Done")
@@ -634,27 +638,16 @@ if bluetooth:
   run_chroot("/usr/bin/systemctl", "enable", "bluetooth")
   print("Done")
 
-if cpu == "amd":
+if cpu == "AMD":
   print_task("Installing AMD microcode")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "amd-ucode")
   print("Done")
 
-if cpu == "intel":
+if cpu == "Intel":
   print_task("Installing Intel microcode")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "intel-ucode")
   print("Done")
 
-
-if disk != "None":
-  partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="EFI"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-  print_task("Mounting EFI")
-  run_chroot("/usr/bin/mkdir", "-p", "/efi")
-  run_chroot("/usr/bin/mount", partition, "/efi")
-  print("Done")
-
-print_task("Installing boot manager")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "grub efibootmgr")
-print("Done")
 
 if disk != "None" and encrypt:
   print_task("Install LVM2 and configure encryption")
@@ -662,18 +655,20 @@ if disk != "None" and encrypt:
   hooks = parse_hooks_encrypt_lvm()
   run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
   run_chroot("/usr/bin/mkinitcpio", "-P")
-  cryptuuid = get_crypt_uuid(disk)
-  rootuuid = get_root_uuid()
-  run_chroot("/usr/bin/sed", "-i -e", '"s/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\\"quiet loglevel=3 rd.systemd.show_status=auto rd.udev.log_level=3 loglevel=3 vga=current splash cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + '\\"/g"', "/etc/default/grub")
   print("Done")
 
-print_task("Setup Grub")
-if hide_grub:
-  run_chroot("sed", "-i -e", "'s/GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/g'", "/etc/default/grub")
 
-run_chroot("/usr/bin/grub-install", "--target=x86_64-efi --efi-directory=/efi --removable")
-run_chroot("/usr/bin/grub-mkconfig", "-o", "/boot/grub/grub.cfg")
-print("Done")
+if disk != "None":
+  cryptdev = get_crypt_dev(disk)
+  rootuuid = get_root_uuid()
+  cpucode = get_cpu_code(cpu)
+  cmdLine = 'quiet loglevel=3 vga=current splash rd.systemd.show_status=auto rd.udev.log_level=3 cryptdevice=' + cryptdev + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=\initramfs-linux-lts.img'
+  print_task("Installing boot manager")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
+  print("Done")
+  print_task("Setup bootloader")
+  run_chroot("/usr/bin/efibootmgr", "--create", "--disk", disk, "--part 1", "--label 'Arch Linux'", "--loader", "/vmlinuz-linux-lts", "--unicode", cmdLine)
+  print("Done")
 
 if gnome:
   print_task("Installing X.Org Server")
