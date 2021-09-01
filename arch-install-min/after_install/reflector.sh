@@ -18,4 +18,4 @@ cat <<EOF | sudo tee /etc/xdg/reflector/reflector.conf
 EOF
 
 sudo systemctl enable reflector.timer
-echo "Edit /etc/xdg/reflector/reflector.conf and run sudo systemctl enable reflector"
+echo "Edit /etc/xdg/reflector/reflector.conf and run sudo systemctl start reflector"
