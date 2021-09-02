@@ -677,7 +677,7 @@ if disk != "None":
     cryptuuid = get_crypt_uuid(disk)
     cmdLine = 'cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
   
-  cmdLine = '"' + cmdLine + ' quiet loglevel=3 splash rd.systemd.show_status=auto rd.udev.log_priority=3 nowatchdog'+ cmdLineExtra + '"'
+  cmdLine = '"' + cmdLine + ' quiet loglevel=3 splash rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt'+ cmdLineExtra + '"'
 
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
@@ -716,7 +716,7 @@ if gnome:
   print("Done")
   if vga == "intel":
     print_task("Installing Intel video drivers")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-intel")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mesa")
     print("Done")
   if vga == "nvidia":
     print_task("Installing Nvidia video drivers")
