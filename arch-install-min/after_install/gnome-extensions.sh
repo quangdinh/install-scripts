@@ -2,4 +2,4 @@
 
 set -e
 
-yay -S gnome-shell-extension-dash-to-dock gnome-shell-extension-topicons-plus gnome-shell-extension-sound-output-device-chooser gnome-shell-extension-clipboard-indicator
+yay -S gnome-shell-extension-dash-to-dock gnome-shell-extension-topicons-plus gnome-shell-extension-sound-output-device-chooser gnome-shell-extension-clipboard-indicator gnome-shell-extension-gsconnect
