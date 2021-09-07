@@ -733,7 +733,7 @@ if xfce:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-fbdev xf86-video-vesa")
     print("Done")
   print_task("Installing Xfce")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xfwm4 xfdesktop xfce4-settings xfce4-session xfce4-power-manager xfce4-panel xfconf garcon exo xfce4-screensaver network-manager-applet xfce4-notifyd")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xfwm4 xfdesktop xfce4-settings xfce4-session xfce4-power-manager xfce4-appfinder xfce4-panel xfconf garcon exo xfce4-screensaver network-manager-applet xfce4-notifyd")
   if bluetooth:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "blueman")
   print("Done")
