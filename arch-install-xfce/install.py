@@ -745,7 +745,7 @@ if xfce:
 
   if xfce_utils:
     print_task("Installing Xfce utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mousepad tumbler thunar thunar-volman thunar-archive-plugin ristretto xfce4-screenshooter xfce4-terminal xreader ttf-droid gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mousepad tumbler thunar thunar-volman thunar-archive-plugin file-roller ristretto xfce4-screenshooter xfce4-terminal xreader ttf-droid gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if xfce_multimedia:
     print_task("Installing Xfce multimedia applications")
