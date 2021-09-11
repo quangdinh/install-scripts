@@ -112,6 +112,13 @@ def ask_username():
   print("Invalid username")
   return ask_username()
 
+def ask_filesystem():
+  fs = request_input("Choose filesystem ([ext4], btrfs, xfs): ")
+  if fs.lower() == "btrfs" or fs.lower() == "xfs" or fs.lower() == "" or fs.lower() == "ext4":
+    return fs
+  print("Invalid option\n")
+  return ask_filesystem()
+
 def ask_use_encryption():
   encrypt = request_input("Do you want to use encryption? Yes/[No] ")
   if encrypt.lower() == "yes" or encrypt.lower() == "y":
@@ -338,6 +345,14 @@ def get_cpu_code(cpu):
     return "initrd=/amd-ucode.img "
   return ""
 
+def format_root(partition, fs):
+  if fs == "btrfs":
+    run_command("/usr/bin/mkfs.btrfs", "-L", "ArchRoot", partition)
+  elif fs == "xfs":
+    run_command("/usr/bin/mkfs.xfs", partition)
+  else:
+    run_command("/usr/bin/mkfs.ext4", partition)
+
 def hide_system_apps():
   shell_script = """
 #!/usr/bin/env bash
@@ -390,8 +405,11 @@ if disk != "None":
     cryptroot = "/dev/mapper/cryptlvm"
   clear()
   swap = ask_swap()
+  clear()
+  filesystem = ask_filesystem()
 
 clear()
+
 timezone = ask_timezone()
 clear()
 locales = ask_locale()
@@ -424,6 +442,12 @@ gnome = True
 q = request_input("Do you want to install Gnome? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   gnome = False
+
+pipewire = gnome
+if gnome:
+  q = request_input("Do you want to install Pipewire? [Yes]/No ")
+  if q.lower() == "no" or q.lower() == "n":
+    pipewire = False
 
 gnome_utils = gnome
 if gnome:
@@ -458,6 +482,7 @@ if disk == "None":
   print("{:>35}{:<1} {:<50}".format("Disk", ":", "No partitioning. Already mounted at /mnt"))
 else:
   print("{:>35}{:<1} {:<50}".format("Disk", ":", disk + " (Will be partitioned & formatted)"))
+  print("{:>35}{:<1} {:<50}".format("Filesystem", ":", filesystem))
   print("{:>35}{:<1} {:<50}".format("Swap", ":", str(swap) + " GiB"))
   print("{:>35}{:<1} {:<50}".format("Encryption", ":", string_bool(encrypt)))
 
@@ -470,6 +495,7 @@ print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
 print("{:>35}{:<1} {:<50}".format("Gnome", ":", string_bool(gnome)))
 if gnome:
+  print("{:>35}{:<1} {:<50}".format("Pipewire", ":", string_bool(pipewire)))
   print("{:>35}{:<1} {:<50}".format("Gnome utilities", ":", string_bool(gnome_utils)))
   print("{:>35}{:<1} {:<50}".format("Gnome multimedia applications", ":", string_bool(gnome_multimedia)))
 
@@ -549,12 +575,12 @@ if disk != "None":
     print("Done")
     print_task("Formatting root partition")
     partition = "/dev/mapper/" + volume_group + "-lvRoot"
-    run_command("/usr/bin/mkfs.ext4", partition)
+    format_root(partition, filesystem)
     print("Done")
   else:
     print_task("Formatting root partition")
     partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="root"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-    run_command("/usr/bin/mkfs.ext4", partition)
+    format_root(partition, filesystem)
     print("Done")
 
 
@@ -580,6 +606,14 @@ print("Done")
 print_task("Updating pacman")
 run_chroot("/usr/bin/pacman", "-Syu")
 print("Done")
+
+if filesystem == "btrfs" or filesystem == "xfs":
+  print_task("Installing filesystem utilities")
+  fs_utility = "xfsprogs"
+  if filesystem == "btrfs":
+    fs_utility = "btrfs-progs"
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", fs_utility)
+  print("Done")
 
 print_task("Generating fstab")
 run_command("/usr/bin/genfstab", "-U", "/mnt", ">>", "/mnt/etc/fstab")
@@ -737,12 +771,18 @@ if gnome:
     run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/libgdm-plymouth.pkg.tar.zst", "-o", "/libgdm-plymouth.pkg.tar.zst")
     run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
     run_chroot("rm", "-rf", "/*.pkg.tar.zst")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware")
   else:
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter sof-firmware")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware")
 
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
+
+  if pipewire:
+    print_task("Installing Pipewire")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire xdg-desktop-portal-gtk xdg-desktop-portal")
+    print("Done")
+
   if gnome_utils:
     print_task("Installing Gnome utilities")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor gnome-terminal nautilus sushi gnome-tweaks ttf-droid gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc gvfs-goa gvfs-google")

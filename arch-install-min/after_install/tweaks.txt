@@ -1,0 +1,5 @@
+1. Change "Applications" menu to Icon
+
+Edit /usr/share/gnome-shell/extensions/apps-menu@gnome-shell-extensions.gcampax.github.com/extensions.js
+L372: this._label = new St.Icon({ icon_name: 'view-app-grid-symbolic', style_class: 'system-status-icon', icon_size: 32 });
+
