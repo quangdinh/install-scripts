@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -e
-yay -S kora-icon-theme-git volantes-cursors-git
+yay -S kora-icon-theme-git volantes-cursors-git prof-gnome-theme-git

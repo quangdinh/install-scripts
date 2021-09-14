@@ -785,12 +785,11 @@ if gnome:
 
   if gnome_utils:
     print_task("Installing Gnome utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor gnome-terminal nautilus sushi gnome-tweaks ttf-droid gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc gvfs-goa gvfs-google")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks ttf-droid gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-calendar geary xvidcore x264 ffmpeg gst-libav totem rhythmbox")
-    run_chrootuser(user_name, "gio mime text/calendar org.gnome.Calendar.desktop")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "xvidcore x264 ffmpeg gst-libav totem rhythmbox")
     print("Done")
   hide_system_apps()
 

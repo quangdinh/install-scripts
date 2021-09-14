@@ -13,7 +13,6 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   yay -S nordvpn-bin
   sudo usermod -aG nordvpn $(whoami)
-  sudo systemctl enable nordvpnd
 fi
 
 read -p "Do you want to install 1Password Manager? " -n 1 -r

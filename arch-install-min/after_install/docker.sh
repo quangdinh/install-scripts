@@ -30,5 +30,4 @@ EOT
   fi
   sudo pacman -S --noconfirm docker docker-compose
   sudo usermod -aG docker $(whoami)
-  sudo systemctl enable docker
 fi
