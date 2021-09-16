@@ -438,28 +438,23 @@ if q.lower() == "no" or q.lower() == "n":
   yubi_key = False
 
 
-xfce = True
-q = request_input("Do you want to install Xfce? [Yes]/No ")
+i3 = True
+q = request_input("Do you want to install i3WM? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
-  xfce = False
+  i3 = False
 
-xfce_i3 = xfce
-if xfce:
-  q = request_input("Do you want to install i3wm? [Yes]/No ")
-  if q.lower() == "no" or q.lower() == "n":
-    xfce_i3 = False
 
-xfce_utils = xfce
-if xfce:
-  q = request_input("Do you want to install Xfce utilities? [Yes]/No ")
+x_utils = i3
+if i3:
+  q = request_input("Do you want to install X utilities? [Yes]/No ")
   if q.lower() == "no" or q.lower() == "n":
-    xfce_utils = False
+    x_utils = False
 
-xfce_multimedia = xfce
-if xfce:
-  q = request_input("Do you want to install Xfce multimedia applications? [Yes]/No ")
+x_multimedia = i3
+if i3:
+  q = request_input("Do you want to install X multimedia applications? [Yes]/No ")
   if q.lower() == "no" or q.lower() == "n":
-    xfce_multimedia = False
+    x_multimedia = False
 
 git_base = True
 q = request_input("Do you want to install development packages? [Yes]/No ")
@@ -493,11 +488,10 @@ print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
 print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
-print("{:>35}{:<1} {:<50}".format("Xfce", ":", string_bool(xfce)))
-if gnome:
-  print("{:>35}{:<1} {:<50}".format("i3WM", ":", string_bool(xfce_i3)))
-  print("{:>35}{:<1} {:<50}".format("Xfce utilities", ":", string_bool(xfce_utils)))
-  print("{:>35}{:<1} {:<50}".format("Xfce multimedia applications", ":", string_bool(xfce_multimedia)))
+print("{:>35}{:<1} {:<50}".format("i3WM", ":", string_bool(i3)))
+if i3:
+  print("{:>35}{:<1} {:<50}".format("X utilities", ":", string_bool(x_utils)))
+  print("{:>35}{:<1} {:<50}".format("X multimedia applications", ":", string_bool(x_multimedia)))
 
 print("{:>35}{:<1} {:<50}".format("Development packages", ":", string_bool(git_base)))
 print()
@@ -744,7 +738,7 @@ if bluetooth:
   run_chroot("/usr/bin/systemctl", "enable", "bluetooth")
   print("Done")
 
-if xfce:
+if i3:
   print_task("Installing X.Org Server")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit")
   print("Done")
@@ -765,8 +759,8 @@ if xfce:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-fbdev xf86-video-vesa")
     print("Done")
   
-  print_task("Installing Xfce")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xfwm4 xfdesktop xfce4-settings xfce4-session xfce4-power-manager xfce4-appfinder xfce4-panel xfconf garcon exo xfce4-screensaver network-manager-applet xfce4-notifyd")
+  print_task("Installing i3WM")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "i3-gaps arandr alacritty feh gnome-keyring mate-power-manager network-manager-applet picom rofi")
   if bluetooth:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "blueman")
   print("Done")
@@ -776,18 +770,15 @@ if xfce:
   run_chroot("/usr/bin/systemctl", "enable", "lightdm")
   print("Done")
 
-  if xfce_i3:
-    print_task("Installing i3 Window Manager")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "i3")
+  if x_utils:
+    print_task("Installing X utilities")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mousepad tumbler thunar thunar-volman thunar-archive-plugin file-roller ristretto xreader ttf-droid gnu-free-fonts gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
-
-  if xfce_utils:
-    print_task("Installing Xfce utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mousepad tumbler thunar thunar-volman thunar-archive-plugin file-roller ristretto xfce4-screenshooter xreader ttf-droid gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
-    print("Done")
-  if xfce_multimedia:
-    print_task("Installing Xfce multimedia applications")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "xvidcore x264 ffmpeg gst-libav parole rhythmbox xfce4-pulseaudio-plugin pulseaudio-bluetooth pulseaudio pavucontrol sof-firmware")
+  if x_multimedia:
+    print_task("Installing X multimedia applications")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "xvidcore x264 ffmpeg gst-libav parole rhythmbox pulseaudio pavucontrol sof-firmware pasystray")
+    if bluetooth:
+      run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
     print("Done")
   hide_system_apps()
 
