@@ -881,7 +881,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle gnu-free-fonts ttf-droid ttf-font-awesome bemenu-wayland dunst xdg-user-dirs wl-clipboard grim jq")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle gnu-free-fonts ttf-droid ttf-font-awesome bemenu-wayland dunst xdg-user-dirs wl-clipboard grim jq slurp")
   install_brightness()
   install_swaylock()
   install_screenshot()
@@ -893,7 +893,7 @@ if xwm:
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv rhythmbox pulseaudio pavucontrol sof-firmware")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv mpd ncmpcpp xfmpc pulseaudio pavucontrol sof-firmware")
     run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/volumectl.pkg.tar.zst", "-o", "/volumectl.pkg.tar.zst")
     run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
     run_chroot("rm", "-rf", "/*.pkg.tar.zst")
