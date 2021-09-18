@@ -22,5 +22,6 @@ fi
 read -p "Do you want to install Android Studio? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S android-studio
+
+  yay -S jdk11-openjdk android-studio
 fi

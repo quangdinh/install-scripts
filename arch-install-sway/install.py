@@ -438,15 +438,17 @@ indicator-idle-visible
 indicator-radius=150
 indicator-thickness=30
 
-inside-color=040A0Fht
+inside-color=040A0F
 inside-clear-color=040A0F
 inside-ver-color=040A0F
 inside-wrong-color=040A0F
 
-key-hl-color=132C3Eff
+key-hl-color=78B5E6AA
+bs-hl-color=AA3F39AA
+
 separator-color=040A0F
 
-line-color=132C3Ecc
+line-color=132C3E
 line-uses-ring
 
 text-color=46779C
@@ -455,9 +457,9 @@ text-caps-lock-color=46779C
 text-ver-color=78B6E6
 text-wrong-color=AA3F39
 
-ring-color=132C3E11
+ring-color=132C3E55
 ring-ver-color=78B6E6
-ring-clear-color=132C3E0A
+ring-clear-color=132C3E11
 ring-wrong-color=AA3F39
   """
   directory = "/mnt/etc/sway"
@@ -887,11 +889,11 @@ if xwm:
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "alacritty firefox xdg-desktop-portal-wlr thunar thunar-volman thunar-archive-plugin file-roller xreader gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "alacritty firefox imv xdg-desktop-portal-wlr thunar thunar-volman thunar-archive-plugin file-roller xreader gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "xvidcore x264 ffmpeg gst-libav parole rhythmbox pulseaudio pavucontrol sof-firmware")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv rhythmbox pulseaudio pavucontrol sof-firmware")
     run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/volumectl.pkg.tar.zst", "-o", "/volumectl.pkg.tar.zst")
     run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
     run_chroot("rm", "-rf", "/*.pkg.tar.zst")
