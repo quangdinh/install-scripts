@@ -30,10 +30,10 @@ def add_gnome_keyring(file):
       if "pam_gnome_keyring.so" in line:
         return
       if line.startswith("account"):
-        newLines.append("auth	   optional	    pam_gnome_keyring.so")
+        newLines.append("auth	   optional     pam_gnome_keyring.so")
       newLines.append(line)
       if line.startswith("password"):
-        newLines.append("session    optional	    pam_gnome_keyring.so auto_start")
+        newLines.append("session    optional     pam_gnome_keyring.so auto_start")
   with open(file, "w") as f:
     out = "\n".join(newLines)
     f.write(out)
@@ -375,13 +375,29 @@ def format_root(partition, fs):
 
 def install_brightness():
   script = """
-bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 2%-
-bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +2%
+bindsym XF86MonBrightnessDown exec brightnessctl set 2%-
+bindsym XF86MonBrightnessUp exec brightnessctl set +2%
   """
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/brightness.conf") as f:
+  with open(directory+"/brightness.conf", "w") as f:
+    f.write(script)
+
+def install_screenshot():
+  script = """
+bindsym Print exec grim $(xdg-user-dir PICTURES)/$(date +'Screenshot_%Y-%m-%d_%H%M%S.png')
+bindsym Alt+Print exec grim -g "$(swaymsg -t get_tree | jq -j '.. | select(.type?) | select(.focused).rect | "\(.x),\(.y) \(.width)x\(.height)"')" $(xdg-user-dir PICTURES)/$(date +'Screenshot_%Y-%m-%d_%H%M%S.png')
+bindsym Shift+Print exec grim -g "$(slurp)" $(xdg-user-dir PICTURES)/$(date +'Screenshot_%Y-%m-%d_%H%M%S.png')
+
+bindsym Control+Print exec grim - | wl-copy
+bindsym Control+Alt+Print exec grim -g "$(swaymsg -t get_tree | jq -j '.. | select(.type?) | select(.focused).rect | "\(.x),\(.y) \(.width)x\(.height)"')" - | wl-copy
+bindsym Control+Shift+Print exec grim -g "$(slurp)" - | wl-copy 
+  """
+  directory = "/mnt/etc/sway/config.d"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/screenshot.conf", "w") as f:
     f.write(script)
 
 def install_audio():
@@ -391,25 +407,63 @@ bindsym XF86AudioPlay exec playerctl play-pause
 bindsym XF86AudioNext exec playerctl next
 bindsym XF86AudioPrev exec playerctl previous
 
-bindsym XF86AudioRaiseVolume exec --no-startup-id volumectl up
-bindsym XF86AudioLowerVolume exec --no-startup-id volumectl down
-bindsym XF86AudioMute exec --no-startup-id volumectl toggle
-bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+bindsym XF86AudioRaiseVolume exec volumectl up
+bindsym XF86AudioLowerVolume exec volumectl down
+bindsym XF86AudioMute exec volumectl toggle
+bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
   """
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/audio.conf") as f:
+  with open(directory+"/audio.conf", "w") as f:
     f.write(script)
 
-def install_swayidle():
+def install_swaylock():
   script = """
-exec swayidle -w timeout 300 'swaylock -f -c 263238 -e' timeout 301 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' before-sleep 'swaylock -f -c 263238 -e'
+exec swayidle -w timeout 300 'swaylock -f -C /etc/sway/swaylock.conf' timeout 301 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' before-sleep 'swaylock -f -C /etc/sway/swaylock.conf'
+
+set $locknow swaylock -f -C /etc/sway/swaylock.conf
   """
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/swayidle.conf") as f:
+  with open(directory+"/swayidle.conf", "w") as f:
+    f.write(script)
+  
+  script = """
+ignore-empty-password
+
+color=040A0F
+indicator-idle-visible
+indicator-radius=150
+indicator-thickness=30
+
+inside-color=040A0Fht
+inside-clear-color=040A0F
+inside-ver-color=040A0F
+inside-wrong-color=040A0F
+
+key-hl-color=132C3Eff
+separator-color=040A0F
+
+line-color=132C3Ecc
+line-uses-ring
+
+text-color=46779C
+text-clear-color=46779C
+text-caps-lock-color=46779C
+text-ver-color=78B6E6
+text-wrong-color=AA3F39
+
+ring-color=132C3E11
+ring-ver-color=78B6E6
+ring-clear-color=132C3E0A
+ring-wrong-color=AA3F39
+  """
+  directory = "/mnt/etc/sway"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/swaylock.conf", "w") as f:
     f.write(script)
 
 
@@ -436,7 +490,7 @@ for app in ${sys_apps[@]}; do
   fi
 done
   """
-  with open("/tmp/hide_sys", "a") as f:
+  with open("/tmp/hide_sys", "w") as f:
     f.write(shell_script)
   run_command("sh", "/tmp/hide_sys")
   os.remove("/tmp/hide_sys")
@@ -476,8 +530,10 @@ locales = ask_locale()
 lang = locales[0] + ".UTF-8"
 bluetooth = detect_bluetooth()
 
-clear()
-use_zsh = ask_zsh()
+use_zsh = True
+
+# clear()
+# use_zsh = ask_zsh()
 
 clear()
 print("Setup your user account, this account will have sudo access")
@@ -485,11 +541,13 @@ user_name = ask_username()
 user_label = request_input("User Fullname: ")
 user_password = ask_password()
 
-clear()
-plymouth = True
-q = request_input("Do you want to use Plymouth? [Yes]/No ")
-if q.lower() == "no" or q.lower() == "n":
-  plymouth = False
+plymouth = False
+
+# clear()
+# plymouth = True
+# q = request_input("Do you want to use Plymouth? [Yes]/No ")
+# if q.lower() == "no" or q.lower() == "n":
+#   plymouth = False
 
 clear()
 yubi_key = True
@@ -545,7 +603,7 @@ print("{:>35}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_l
 print("{:>35}{:<1} {:<50}".format("Timezone", ":", timezone))
 print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
 print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
-print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
+# print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
 print("{:>35}{:<1} {:<50}".format("SwayVM", ":", string_bool(xwm)))
@@ -821,14 +879,15 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle gnu-free-fonts ttf-droid ttf-font-awesome bemenu-wayland mako")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle gnu-free-fonts ttf-droid ttf-font-awesome bemenu-wayland dunst xdg-user-dirs wl-clipboard grim jq")
   install_brightness()
-  install_swayidle()
+  install_swaylock()
+  install_screenshot()
   print("Done")
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "alacritty thunar thunar-volman thunar-archive-plugin file-roller xreader gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "alacritty firefox xdg-desktop-portal-wlr thunar thunar-volman thunar-archive-plugin file-roller xreader gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
@@ -849,16 +908,15 @@ if git_base:
 
 if yay:
   print_task("Installing yay")
-  if not git_base:
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go")
-
-  run_chrootuser(user_name, "git", "clone", "https://aur.archlinux.org/yay.git", "~/yay")
-  run_chrootuser(user_name, "cd ~/yay", "&&", "makepkg -s --noconfirm")
-  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/home/" + user_name + "/yay/yay*.pkg.tar.zst")
-  run_chrootuser(user_name, "rm -rf ~/yay")
-  run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
-  run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
+  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/yay.pkg.tar.zst", "-o", "/yay.pkg.tar.zst")
+  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
+  run_chroot("rm", "-rf", "/*.pkg.tar.zst")
   print("Done")
+
+print_task("Copying after_install scripts")
+run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
+run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
+print("Done")
 
 if disk != "None":
   if int(swap) > 0:
