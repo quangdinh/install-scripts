@@ -418,6 +418,31 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
   with open(directory+"/audio.conf", "w") as f:
     f.write(script)
 
+def install_gsettings():
+  script = """
+#!/bin/sh
+
+# usage: import-gsettings
+config="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini"
+if [ ! -f "$config" ]; then exit 1; fi
+
+gnome_schema="org.gnome.desktop.interface"
+gtk_theme="$(grep 'gtk-theme-name' "$config" | sed 's/.*\s*=\s*//')"
+icon_theme="$(grep 'gtk-icon-theme-name' "$config" | sed 's/.*\s*=\s*//')"
+cursor_theme="$(grep 'gtk-cursor-theme-name' "$config" | sed 's/.*\s*=\s*//')"
+font_name="$(grep 'gtk-font-name' "$config" | sed 's/.*\s*=\s*//')"
+gsettings set "$gnome_schema" gtk-theme "$gtk_theme"
+gsettings set "$gnome_schema" icon-theme "$icon_theme"
+gsettings set "$gnome_schema" cursor-theme "$cursor_theme"
+gsettings set "$gnome_schema" font-name "$font_name"
+"""
+  directory = "/mnt/etc/sway"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/gsettings", "w") as f:
+    f.write(script)
+  run_command("chmod", "+x", "/mnt/etc/sway/gsettings")
+
 def install_sway_config():
   script = """
 include /etc/sway/config.d/*.conf
@@ -440,9 +465,7 @@ include /etc/sway/config.d/*.conf
 
 ### Output configuration
   # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-  output * bg $(if [ -f $HOME/.wallpaper ]; then echo $HOME/.wallpaper; else echo "/usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png"; fi) fill
-  output eDP-1 pos 0 360 res 1920x1080 
-  output DP-1 pos 1920 0 res 3440x1440
+  output * bg $(if [ -f $HOME/.config/wallpaper ]; then echo $HOME/.config/wallpaper; else echo "/usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png"; fi) fill
 
 ### Input configuration
   # Keyboard
@@ -614,6 +637,8 @@ focus_follows_mouse no
 
 ### Autostart
 exec_always dunst
+exec_always /etc/sway/gsettings
+
 """
   directory = "/mnt/etc/sway"
   if not os.path.exists(directory):
