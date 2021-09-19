@@ -2,6 +2,13 @@
 
 set -e
 
+
+read -p "Do you want to install Ymuse? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  yay -S ymuse-bin
+fi
+
 read -p "Do you want to install NordVPN? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then

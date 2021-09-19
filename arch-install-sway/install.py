@@ -377,7 +377,7 @@ def install_brightness():
   script = """
 bindsym XF86MonBrightnessDown exec brightnessctl set 2%-
 bindsym XF86MonBrightnessUp exec brightnessctl set +2%
-  """
+"""
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
@@ -393,7 +393,7 @@ bindsym Shift+Print exec grim -g "$(slurp)" $(xdg-user-dir PICTURES)/$(date +'Sc
 bindsym Control+Print exec grim - | wl-copy
 bindsym Control+Alt+Print exec grim -g "$(swaymsg -t get_tree | jq -j '.. | select(.type?) | select(.focused).rect | "\(.x),\(.y) \(.width)x\(.height)"')" - | wl-copy
 bindsym Control+Shift+Print exec grim -g "$(slurp)" - | wl-copy 
-  """
+"""
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
@@ -411,11 +411,263 @@ bindsym XF86AudioRaiseVolume exec volumectl up
 bindsym XF86AudioLowerVolume exec volumectl down
 bindsym XF86AudioMute exec volumectl toggle
 bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
-  """
+"""
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
   with open(directory+"/audio.conf", "w") as f:
+    f.write(script)
+
+def install_sway_config():
+  script = """
+include /etc/sway/config.d/*.conf
+
+### Variables
+  # Logo key. Use Mod1 for Alt.
+  set $mod Mod4
+
+  # Home row direction keys, like vim
+  set $left h
+  set $down j
+  set $up k
+  set $right l
+
+  # Terminal emulator
+  set $term alacritty
+
+  # Launcher
+  set $menu wofi --show run --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
+
+### Output configuration
+  # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
+  output * bg $(if [ -f $HOME/.wallpaper ]; then echo $HOME/.wallpaper; else echo "/usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png"; fi) fill
+  output eDP-1 pos 0 360 res 1920x1080 
+  output DP-1 pos 1920 0 res 3440x1440
+
+### Input configuration
+  # Keyboard
+  input "type:keyboard" {           
+    xkb_options ctrl:nocaps 
+  }
+
+  # Touchpad
+  input "type:touchpad" {
+    dwt enabled
+    tap enabled
+  }
+  
+
+### Key bindings
+  # Start a terminal
+  bindsym $mod+Return exec $term
+
+  # Kill focused window
+  bindsym $mod+Shift+q kill
+
+  # Start your launcher
+  bindsym $mod+d exec $menu
+
+  # Drag floating windows by holding down $mod and left mouse button.
+  # Resize them with right mouse button + $mod.
+  # Despite the name, also works for non-floating windows.
+  # Change normal to inverse to use left mouse button for resizing and right
+  # mouse button for dragging.
+  floating_modifier $mod normal
+
+  # Reload the configuration file
+  bindsym $mod+Shift+c reload
+
+  # Exit sway (logs you out of your Wayland session)
+  bindsym $mod+Shift+e exec swaynag -t warning -m 'Do you really want to exit sway?' -b 'Yes, exit sway' 'swaymsg exit'
+
+  # Lock screen
+  bindsym $mod+Alt+l exec $locknow
+
+  # Moving around:
+    # Move your focus around
+    bindsym $mod+$left focus left
+    bindsym $mod+$down focus down
+    bindsym $mod+$up focus up
+    bindsym $mod+$right focus right
+    # Or use $mod+[up|down|left|right]
+    bindsym $mod+Left focus left
+    bindsym $mod+Down focus down
+    bindsym $mod+Up focus up
+    bindsym $mod+Right focus right
+
+    # Move the focused window with the same, but add Shift
+    bindsym $mod+Shift+$left move left
+    bindsym $mod+Shift+$down move down
+    bindsym $mod+Shift+$up move up
+    bindsym $mod+Shift+$right move right
+    # Ditto, with arrow keys
+    bindsym $mod+Shift+Left move left
+    bindsym $mod+Shift+Down move down
+    bindsym $mod+Shift+Up move up
+    bindsym $mod+Shift+Right move right
+
+  # Workspaces:
+    # Switch to workspace
+    bindsym $mod+1 workspace number 1
+    bindsym $mod+2 workspace number 2
+    bindsym $mod+3 workspace number 3
+    bindsym $mod+4 workspace number 4
+    bindsym $mod+5 workspace number 5
+    bindsym $mod+6 workspace number 6
+    bindsym $mod+7 workspace number 7
+    bindsym $mod+8 workspace number 8
+    bindsym $mod+9 workspace number 9
+    bindsym $mod+0 workspace number 10
+    # Move focused container to workspace
+    bindsym $mod+Shift+1 move container to workspace number 1
+    bindsym $mod+Shift+2 move container to workspace number 2
+    bindsym $mod+Shift+3 move container to workspace number 3
+    bindsym $mod+Shift+4 move container to workspace number 4
+    bindsym $mod+Shift+5 move container to workspace number 5
+    bindsym $mod+Shift+6 move container to workspace number 6
+    bindsym $mod+Shift+7 move container to workspace number 7
+    bindsym $mod+Shift+8 move container to workspace number 8
+    bindsym $mod+Shift+9 move container to workspace number 9
+    bindsym $mod+Shift+0 move container to workspace number 10
+
+  # Layout stuff:
+    # You can "split" the current object of your focus with
+    # $mod+b or $mod+v, for horizontal and vertical splits
+    # respectively.
+    bindsym $mod+b splith
+    bindsym $mod+v splitv
+
+    # Switch the current container between different layout styles
+    bindsym $mod+s layout stacking
+    bindsym $mod+w layout tabbed
+    bindsym $mod+e layout toggle split
+
+    # Make the current focus fullscreen
+    bindsym $mod+f fullscreen
+
+    # Toggle the current focus between tiling and floating mode
+    bindsym $mod+Shift+space floating toggle
+
+    # Swap focus between the tiling area and the floating area
+    bindsym $mod+space focus mode_toggle
+
+    # Move focus to the parent container
+    bindsym $mod+a focus parent
+
+  # Scratchpad:
+    # Sway has a "scratchpad", which is a bag of holding for windows.
+    # You can send windows there and get them back later.
+
+    # Move the currently focused window to the scratchpad
+    bindsym $mod+Shift+minus move scratchpad
+
+    # Show the next scratchpad window or hide the focused scratchpad window.
+    # If there are multiple scratchpad windows, this command cycles through them.
+    bindsym $mod+minus scratchpad show
+
+  # Resizing containers:
+
+    mode "resize" {
+      # left will shrink the containers width
+      # right will grow the containers width
+      # up will shrink the containers height
+      # down will grow the containers height
+      bindsym $left resize shrink width 10px
+      bindsym $down resize grow height 10px
+      bindsym $up resize shrink height 10px
+      bindsym $right resize grow width 10px
+
+      # Ditto, with arrow keys
+      bindsym Left resize shrink width 10px
+      bindsym Down resize grow height 10px
+      bindsym Up resize shrink height 10px
+      bindsym Right resize grow width 10px
+
+      # Return to default mode
+      bindsym Return mode "default"
+      bindsym Escape mode "default"
+    }
+    bindsym $mod+r mode "resize"
+
+
+### Bar
+  bar {
+    swaybar_command waybar
+  }
+
+
+### Styling
+gaps inner 10
+gaps outer 0
+smart_gaps on
+
+default_border pixel 2 
+for_window [class=".*"] border pixel 2 
+
+# Class           Border    BG        text      indicator child border
+client.focused		#78B6E6		#132C3E		#ffffff		#FFFF7D		#78B6E6
+client.unfocused  #132C3E		#132C3E		#ffffff		#FFFF7D		#132C3E
+
+
+### Options
+focus_follows_mouse no
+
+### Autostart
+exec_always dunst
+"""
+  directory = "/mnt/etc/sway"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/config", "w") as f:
+    f.write(script)
+
+
+def install_wofi_styles():
+  script = """
+window {
+margin: 0px;
+border: 1px solid #000813;
+background-color: #282a36;
+}
+
+#input {
+margin: 5px;
+border: none;
+color: #f8f8f2;
+background-color: #44475a;
+}
+
+#inner-box {
+margin: 5px;
+border: none;
+background-color: #282a36;
+}
+
+#outer-box {
+margin: 5px;
+border: none;
+background-color: #282a36;
+}
+
+#scroll {
+margin: 0px;
+border: none;
+}
+
+#text {
+margin: 5px;
+border: none;
+color: #f8f8f2;
+}
+
+#entry:selected {
+background-color: #44475a;
+}
+"""
+  directory = "/mnt/etc/wofi"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/styles.css", "w") as f:
     f.write(script)
 
 def install_swaylock():
@@ -423,7 +675,7 @@ def install_swaylock():
 exec swayidle -w timeout 300 'swaylock -f -C /etc/sway/swaylock.conf' timeout 301 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' before-sleep 'swaylock -f -C /etc/sway/swaylock.conf'
 
 set $locknow swaylock -f -C /etc/sway/swaylock.conf
-  """
+"""
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
@@ -461,7 +713,7 @@ ring-color=132C3E55
 ring-ver-color=78B6E6
 ring-clear-color=132C3E11
 ring-wrong-color=AA3F39
-  """
+"""
   directory = "/mnt/etc/sway"
   if not os.path.exists(directory):
     os.makedirs(directory)
@@ -881,10 +1133,12 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle gnu-free-fonts ttf-droid ttf-font-awesome bemenu-wayland dunst xdg-user-dirs wl-clipboard grim jq slurp")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi dunst xdg-user-dirs wl-clipboard grim jq slurp")
   install_brightness()
   install_swaylock()
   install_screenshot()
+  install_wofi_styles()
+  install_sway_config()
   print("Done")
 
   if x_utils:
@@ -893,7 +1147,7 @@ if xwm:
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv mpd ncmpcpp xfmpc pulseaudio pavucontrol sof-firmware")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv mpd ncmpcpp pulseaudio pavucontrol sof-firmware")
     run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/volumectl.pkg.tar.zst", "-o", "/volumectl.pkg.tar.zst")
     run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
     run_chroot("rm", "-rf", "/*.pkg.tar.zst")
