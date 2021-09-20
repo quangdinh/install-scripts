@@ -1164,6 +1164,7 @@ if xwm:
   install_screenshot()
   install_wofi_styles()
   install_sway_config()
+  install_gsettings()
   print("Done")
 
   if x_utils:
