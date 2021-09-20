@@ -418,6 +418,36 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
   with open(directory+"/audio.conf", "w") as f:
     f.write(script)
 
+def install_gammastep():
+  script = """
+#!/bin/sh
+
+pid=$(pgrep gammastep)
+
+if [[ $1 = "toggle" ]]; then
+	if pgrep -x "gammastep" > /dev/null; then
+		kill -9 $(pgrep -x "gammastep");
+	else
+		gammastep -O ${GAMMASTEP_NIGHT:-3500} &
+	fi
+fi
+
+if pgrep -x "gammastep" > /dev/null; then
+	echo ""
+	echo "Nightlight is on"
+else
+	echo ""
+	echo "Nightlight is off"
+fi
+"""
+  directory = "/mnt/etc/sway"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/gammastep.sh", "w") as f:
+    f.write(script)
+  run_command("chmod", "+x", "/mnt/etc/sway/gammastep.sh")
+
+
 def install_gsettings():
   script = """
 #!/bin/sh
@@ -1158,13 +1188,14 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi dunst xdg-user-dirs wl-clipboard grim jq slurp")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi dunst xdg-user-dirs wl-clipboard grim jq slurp gammastep")
   install_brightness()
   install_swaylock()
   install_screenshot()
   install_wofi_styles()
   install_sway_config()
   install_gsettings()
+  install_gammastep()
   print("Done")
 
   if x_utils:
