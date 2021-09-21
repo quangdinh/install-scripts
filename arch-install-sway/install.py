@@ -491,7 +491,7 @@ include /etc/sway/config.d/*.conf
   set $term alacritty
 
   # Launcher
-  set $menu wofi --show run --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
+  set $menu wofi --show drun --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
 
 ### Output configuration
   # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
@@ -1168,7 +1168,7 @@ if bluetooth:
 
 if xwm:
   print_task("Installing X.Org Server")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit xorg-xwayland gnome-themes-extra")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit xorg-xwayland gnome-themes-extra qt5ct")
   print("Done")
   if vga == "intel":
     print_task("Installing Intel video drivers")
@@ -1204,7 +1204,7 @@ if xwm:
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv mpd ncmpcpp pulseaudio pavucontrol sof-firmware")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv mpd ncmpcpp pulseaudio pavucontrol sof-firmware pulsemixer")
     run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/volumectl.pkg.tar.zst", "-o", "/volumectl.pkg.tar.zst")
     run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
     run_chroot("rm", "-rf", "/*.pkg.tar.zst")

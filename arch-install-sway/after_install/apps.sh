@@ -28,8 +28,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   sudo pacman -S --noconfirm telegram-desktop
 fi
 
-read -p "Do you want to install FreeOffice? " -n 1 -r
+read -p "Do you want to install LibreOffice? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S freeoffice
+  sudo pacman -S --noconfirm libreoffice-fresh
 fi
