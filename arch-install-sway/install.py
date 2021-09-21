@@ -1212,7 +1212,8 @@ if xwm:
     if bluetooth:
       run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
     print("Done")
-
+  hide_system_apps()
+  
 if git_base:
   print_task("Installing development packages")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs npm")
