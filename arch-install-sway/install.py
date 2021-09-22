@@ -324,6 +324,7 @@ def parse_hooks_encrypt_lvm(encrypt, plymouth):
         if not plymouth:
           results.append("encrypt")
         results.append("lvm2")
+      results.append("resume")
       results.append(hook)
       continue
 
@@ -343,6 +344,18 @@ def get_crypt_uuid(disk):
   partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="cryptlvm"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
   if partition == "":
     print("Error! Cryptlvm not found")
+    sys.exit(0)
+  uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
+  return uuid
+
+def get_swap_uuid(encrypt):
+  if encrypt:
+    partition = "/dev/mapper/VolGroup0-lvSwap"
+  else:
+    partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="swap"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+  
+  if partition == "":
+    print("Error! swap not found")
     sys.exit(0)
   uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
   return uuid
@@ -419,8 +432,7 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
     f.write(script)
 
 def install_powermenu():
-  script = """
-#!/usr/bin/env python3
+  script = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
 
@@ -439,7 +451,7 @@ def run_menu():
     "systemctl poweroff"
   )
 
-  options = "\n".join(keys)
+  options = "\\n".join(keys)
   choice = os.popen("echo -e '" + options + "' | wofi --dmenu --insensitive --prompt 'Power Menu' --style /etc/wofi/styles.css --width 200 --height 142 --cache-file /dev/null").readline().strip()
   if choice in keys:
     os.popen(actions[keys.index(choice)])
@@ -454,8 +466,7 @@ run_menu()
   run_command("chmod", "+x", directory+"/powermenu.py")
 
 def install_gammastep():
-  script = """
-#!/bin/sh
+  script = """#!/bin/sh
 
 pid=$(pgrep gammastep)
 
@@ -484,8 +495,7 @@ fi
 
 
 def install_gsettings():
-  script = """
-#!/bin/sh
+  script = """#!/bin/sh
 
 # usage: import-gsettings
 config="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini"
@@ -874,7 +884,6 @@ clear()
 locales = ask_locale()
 lang = locales[0] + ".UTF-8"
 bluetooth = detect_bluetooth()
-swap_uuid = ""
 use_zsh = True
 
 # clear()
@@ -992,7 +1001,6 @@ if disk != "None":
   if not encrypt and int(swap) > 0:
     print_task("Enabling Swap")
     partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="swap"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
-    swap_uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
     run_command("/usr/bin/mkswap", partition)
     run_command("/usr/bin/swapon", partition)
     print("Done")
@@ -1024,7 +1032,6 @@ if disk != "None":
       print("Done")
       print_task("Enabling Swap")
       partition = "/dev/mapper/" + volume_group + "-lvSwap"
-      swap_uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
       run_command("/usr/bin/mkswap", partition)
       run_command("/usr/bin/swapon", partition)
       print("Done")
@@ -1170,6 +1177,7 @@ if disk != "None":
     cryptuuid = get_crypt_uuid(disk)
     cmdLine = 'cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
   
+  swap_uuid = get_swap_uuid(encrypt)
   if swap_uuid != "":
     cmdLine = cmdLine + " resume=UUID=" + swap_uuid
 
