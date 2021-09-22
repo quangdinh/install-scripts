@@ -20,6 +20,7 @@ read -p "Do you want to install 1Password Manager? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   yay -S --noconfirm 1password
+  sudo sed -i -e "s/Exec=\/opt\/1Password\/1password %U/Exec=\/opt\/1Password\/1password --enable-features=UseOzonePlatform --ozone-platform=wayland %U/g" /usr/share/applications/1password.desktop
 fi
 
 read -p "Do you want to install Telegram Desktop? " -n 1 -r
