@@ -418,6 +418,41 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
   with open(directory+"/audio.conf", "w") as f:
     f.write(script)
 
+def install_powermenu():
+  script = """
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import os
+
+def run_menu():
+  keys = (
+    "\uf023   Log Out",
+    "\uf186   Suspend",
+    "\uf021   Reboot",
+    "\uf011   Shutdown",
+  )
+
+  actions = (
+    "swaymsg exit",
+    "systemctl suspend",
+    "systemctl reboot",
+    "systemctl poweroff"
+  )
+
+  options = "\n".join(keys)
+  choice = os.popen("echo -e '" + options + "' | wofi --dmenu --insensitive --prompt 'Power Menu' --style /etc/wofi/styles.css --width 200 --height 142 --cache-file /dev/null").readline().strip()
+  if choice in keys:
+    os.popen(actions[keys.index(choice)])
+
+run_menu()
+"""
+  directory = "/mnt/etc/wofi"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/powermenu.py", "w") as f:
+    f.write(script)
+  run_command("chmod", "+x", directory+"/powermenu.py")
+
 def install_gammastep():
   script = """
 #!/bin/sh
@@ -491,7 +526,7 @@ include /etc/sway/config.d/*.conf
   set $term alacritty
 
   # Launcher
-  set $menu wofi --show drun --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
+  set $menu wofi --show drun --prompt "Search" --allow-images --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
 
 ### Output configuration
   # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
@@ -531,7 +566,7 @@ include /etc/sway/config.d/*.conf
   bindsym $mod+Shift+c reload
 
   # Exit sway (logs you out of your Wayland session)
-  bindsym $mod+Shift+e exec swaynag -t warning -m 'Do you really want to exit sway?' -b 'Yes, exit sway' 'swaymsg exit'
+  bindsym $mod+Shift+e exec /etc/wofi/powermenu.py
 
   # Lock screen
   bindsym $mod+Alt+l exec $locknow
@@ -680,43 +715,44 @@ exec_always /etc/sway/gsettings
 def install_wofi_styles():
   script = """
 window {
-margin: 0px;
-border: 1px solid #000813;
-background-color: #282a36;
+  font-family: "Droid Sans", "Font Awesome 5 Free", Helvetica, Arial, sans-serif;
+  margin: 0px;
+  border: 1px solid #000813;
+  background-color: #282a36;
 }
 
 #input {
-margin: 5px;
-border: none;
-color: #f8f8f2;
-background-color: #44475a;
+  margin: 5px;
+  border: none;
+  color: #f8f8f2;
+  background-color: #44475a;
 }
 
 #inner-box {
-margin: 5px;
-border: none;
-background-color: #282a36;
+  margin: 5px;
+  border: none;
+  background-color: #282a36;
 }
 
 #outer-box {
-margin: 5px;
-border: none;
-background-color: #282a36;
+  margin: 5px;
+  border: none;
+  background-color: #282a36;
 }
 
 #scroll {
-margin: 0px;
-border: none;
+  margin: 0px;
+  border: none;
 }
 
 #text {
-margin: 5px;
-border: none;
-color: #f8f8f2;
+  margin: 5px;
+  border: none;
+  color: #f8f8f2;
 }
 
 #entry:selected {
-background-color: #44475a;
+  background-color: #44475a;
 }
 """
   directory = "/mnt/etc/wofi"
@@ -838,7 +874,7 @@ clear()
 locales = ask_locale()
 lang = locales[0] + ".UTF-8"
 bluetooth = detect_bluetooth()
-
+swap_uuid = ""
 use_zsh = True
 
 # clear()
@@ -956,6 +992,7 @@ if disk != "None":
   if not encrypt and int(swap) > 0:
     print_task("Enabling Swap")
     partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="swap"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+    swap_uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
     run_command("/usr/bin/mkswap", partition)
     run_command("/usr/bin/swapon", partition)
     print("Done")
@@ -987,6 +1024,7 @@ if disk != "None":
       print("Done")
       print_task("Enabling Swap")
       partition = "/dev/mapper/" + volume_group + "-lvSwap"
+      swap_uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
       run_command("/usr/bin/mkswap", partition)
       run_command("/usr/bin/swapon", partition)
       print("Done")
@@ -1132,7 +1170,10 @@ if disk != "None":
     cryptuuid = get_crypt_uuid(disk)
     cmdLine = 'cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
   
-  cmdLine = '"' + cmdLine + ' quiet loglevel=3 splash rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt,iTCO_vendor_support fbcon=nodefer'+ cmdLineExtra + '"'
+  if swap_uuid != "":
+    cmdLine = cmdLine + " resume=UUID=" + swap_uuid
+
+  cmdLine = '"' + cmdLine + ' quiet loglevel=3 splash rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt,iTCO_vendor_support nmi_watchdog=0'+ cmdLineExtra + '"'
 
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
@@ -1196,6 +1237,7 @@ if xwm:
   install_sway_config()
   install_gsettings()
   install_gammastep()
+  install_powermenu()
   print("Done")
 
   if x_utils:

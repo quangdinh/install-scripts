@@ -5,7 +5,7 @@ set -e
 read -p "Do you want to install OneDrive? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S onedriver
+  yay -S --noconfirm onedriver
   # create the mountpoint and determine the service name
     export MOUNTPOINT=~/OneDrive
     mkdir -p $MOUNTPOINT

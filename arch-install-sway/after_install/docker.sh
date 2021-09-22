@@ -18,7 +18,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   pass init $key
 
   echo "Installing gnupg & pass"
-  yay -S docker-credential-pass-bin
+  yay -S --noconfirm docker-credential-pass-bin
 
   if [ ! -f "$HOME/.docker/config.json" ]; then
     mkdir -p $HOME/.docker
