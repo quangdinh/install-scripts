@@ -440,6 +440,7 @@ def run_menu():
   keys = (
     "\uf023   Log Out",
     "\uf186   Suspend",
+    "\uf2dc   Hibernate",
     "\uf021   Reboot",
     "\uf011   Shutdown",
   )
@@ -447,12 +448,13 @@ def run_menu():
   actions = (
     "swaymsg exit",
     "systemctl suspend",
+    "systemctl hibernate",
     "systemctl reboot",
     "systemctl poweroff"
   )
 
   options = "\\n".join(keys)
-  choice = os.popen("echo -e '" + options + "' | wofi --dmenu --insensitive --prompt 'Power Menu' --style /etc/wofi/styles.css --width 200 --height 142 --cache-file /dev/null").readline().strip()
+  choice = os.popen("echo -e '" + options + "' | wofi --dmenu --insensitive --prompt 'Power Menu' --style /etc/wofi/styles.css --width 200 --height 175 --cache-file /dev/null").readline().strip()
   if choice in keys:
     os.popen(actions[keys.index(choice)])
 
@@ -1118,7 +1120,7 @@ run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
 print("Done")
 
 print_task("Setup user account")
-run_chroot("/usr/bin/useradd", "-G wheel,input,lp -m -c \"" + user_label  + "\"", user_name)
+run_chroot("/usr/bin/useradd", "-G wheel,input,lp,video -m -c \"" + user_label  + "\"", user_name)
 run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
 run_chroot("passwd -l root")
 print("Done")
@@ -1171,7 +1173,7 @@ if disk != "None":
     cmdLineExtra = ' i915.fastboot=1'
 
   cpucode = get_cpu_code(cpu)
-  cmdLine = 'root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
+  cmdLine = 'root=UUID=' + rootuuid + ' ' + cpucode + 'initrd=/initramfs-linux-lts.img'
 
   if encrypt:
     cryptuuid = get_crypt_uuid(disk)
@@ -1181,7 +1183,7 @@ if disk != "None":
   if swap_uuid != "":
     cmdLine = cmdLine + " resume=UUID=" + swap_uuid
 
-  cmdLine = '"' + cmdLine + ' quiet loglevel=3 splash rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt,iTCO_vendor_support nmi_watchdog=0'+ cmdLineExtra + '"'
+  cmdLine = '"' + 'quiet loglevel=3 splash ' + cmdLine  + ' rw rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt,iTCO_vendor_support nmi_watchdog=0'+ cmdLineExtra + '"'
 
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
@@ -1199,7 +1201,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch htop gnome-keyring brightnessctl")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "polkit vim neofetch htop gnome-keyring brightnessctl")
 add_gnome_keyring("/mnt/etc/pam.d/login")
 print("Done")
 
