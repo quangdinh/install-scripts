@@ -40,11 +40,8 @@ def add_gnome_keyring():
     f.write(out)
   file = "/mnt/etc/pam.d/passwd"
   with open(file, "a") as f:
-    f.write("\npassword   optional    pam_gnome_keyring.so"
+    f.write("password   optional    pam_gnome_keyring.so\n")
 
-  
-
-    
 
 def request_input(prompt):
   r = input(prompt)
@@ -719,8 +716,9 @@ client.unfocused  #132C3E		#132C3E		#ffffff		#FFFF7D		#132C3E
 focus_follows_mouse no
 
 ### Autostart
-exec_always mako
+exec_always "pkill mako; mako"
 exec_always /etc/sway/gsettings
+exec_always "pkill kanshi; kanshi"
 
 """
   directory = "/mnt/etc/sway"
@@ -834,7 +832,7 @@ def hide_system_apps():
   shell_script = """
 #!/usr/bin/env bash
 
-sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo )
+sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo xfce4-about)
 dir="/mnt/usr/share/applications"
 for app in ${sys_apps[@]}; do
   file_name="$dir/$app.desktop"
@@ -1225,7 +1223,7 @@ if bluetooth:
 
 if xwm:
   print_task("Installing X.Org Server")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit xorg-xwayland gnome-themes-extra qt5ct")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit xorg-xwayland gnome-themes-extra qt5-wayland qt5ct")
   print("Done")
   if vga == "intel":
     print_task("Installing Intel video drivers")
@@ -1270,13 +1268,13 @@ if xwm:
     if bluetooth:
       run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
     print("Done")
-  hide_system_apps()
   
 if git_base:
   print_task("Installing development packages")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs npm")
   print("Done")
 
+hide_system_apps()
 
 if yay:
   print_task("Installing yay")

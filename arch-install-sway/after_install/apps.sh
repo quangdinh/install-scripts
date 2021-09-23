@@ -26,7 +26,7 @@ fi
 read -p "Do you want to install Telegram Desktop? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S --noconfirm telegram-desktop
+  yay -S --noconfirm telegram-desktop-bin
 fi
 
 read -p "Do you want to install LibreOffice? " -n 1 -r
