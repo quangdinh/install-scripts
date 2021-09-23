@@ -525,8 +525,6 @@ gsettings set "$gnome_schema" font-name "$font_name"
 
 def install_sway_config():
   script = """
-include /etc/sway/config.d/*.conf
-
 ### Variables
   # Logo key. Use Mod1 for Alt.
   set $mod Mod4
@@ -542,6 +540,8 @@ include /etc/sway/config.d/*.conf
 
   # Launcher
   set $menu wofi --show drun --prompt "Search" --allow-images --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
+### Include configs
+  include /etc/sway/config.d/*.conf
 
 ### Output configuration
   # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
@@ -592,6 +592,7 @@ include /etc/sway/config.d/*.conf
     bindsym $mod+$down focus down
     bindsym $mod+$up focus up
     bindsym $mod+$right focus right
+
     # Or use $mod+[up|down|left|right]
     bindsym $mod+Left focus left
     bindsym $mod+Down focus down
@@ -603,6 +604,7 @@ include /etc/sway/config.d/*.conf
     bindsym $mod+Shift+$down move down
     bindsym $mod+Shift+$up move up
     bindsym $mod+Shift+$right move right
+
     # Ditto, with arrow keys
     bindsym $mod+Shift+Left move left
     bindsym $mod+Shift+Down move down
@@ -621,6 +623,7 @@ include /etc/sway/config.d/*.conf
     bindsym $mod+8 workspace number 8
     bindsym $mod+9 workspace number 9
     bindsym $mod+0 workspace number 10
+
     # Move focused container to workspace
     bindsym $mod+Shift+1 move container to workspace number 1
     bindsym $mod+Shift+2 move container to workspace number 2
@@ -668,17 +671,17 @@ include /etc/sway/config.d/*.conf
     # If there are multiple scratchpad windows, this command cycles through them.
     bindsym $mod+minus scratchpad show
 
-  # Resizing containers:
-
+  # Resize
     mode "resize" {
-      # left will shrink the containers width
-      # right will grow the containers width
-      # up will shrink the containers height
-      # down will grow the containers height
       bindsym $left resize shrink width 10px
       bindsym $down resize grow height 10px
       bindsym $up resize shrink height 10px
       bindsym $right resize grow width 10px
+
+      bindsym Shift+$left resize shrink width 50px
+      bindsym Shift+$down resize grow height 50px
+      bindsym Shift+$up resize shrink height 50px
+      bindsym Shift+$right resize grow width 50px
 
       # Ditto, with arrow keys
       bindsym Left resize shrink width 10px
@@ -686,12 +689,16 @@ include /etc/sway/config.d/*.conf
       bindsym Up resize shrink height 10px
       bindsym Right resize grow width 10px
 
+      bindsym Shift+Left resize shrink width 50px
+      bindsym Shift+Down resize grow height 50px
+      bindsym Shift+Up resize shrink height 50px
+      bindsym Shift+Right resize grow width 50px
+      
       # Return to default mode
       bindsym Return mode "default"
       bindsym Escape mode "default"
     }
     bindsym $mod+r mode "resize"
-
 
 ### Bar
   bar {
@@ -700,25 +707,28 @@ include /etc/sway/config.d/*.conf
 
 
 ### Styling
-gaps inner 10
-gaps outer 0
-smart_gaps on
+  # Gaps
+  gaps inner 10
+  gaps outer 0
+  smart_gaps on
 
-default_border pixel 2 
-for_window [class=".*"] border pixel 2 
+  # Borders
+  default_border pixel 2 
+  for_window [class=".*"] border pixel 2 
 
-# Class           Border    BG        text      indicator child border
-client.focused		#78B6E6		#132C3E		#ffffff		#FFFF7D		#78B6E6
-client.unfocused  #132C3E		#132C3E		#ffffff		#FFFF7D		#132C3E
+  #Colors
+  # Class           Border    BG        text      indicator child border
+  client.focused    #78B6E6   #132C3E   #ffffff   #FFFFFF   #78B6E6
+  client.unfocused  #132C3E   #132C3E   #ffffff   #FFFF7D   #132C3E
 
 
 ### Options
-focus_follows_mouse no
+  focus_follows_mouse no
 
 ### Autostart
-exec_always "pkill mako; mako"
-exec_always /etc/sway/gsettings
-exec_always "pkill kanshi; kanshi"
+  exec_always "pkill mako; mako"
+  exec_always /etc/sway/gsettings
+  exec_always "pkill kanshi; kanshi"
 
 """
   directory = "/mnt/etc/sway"

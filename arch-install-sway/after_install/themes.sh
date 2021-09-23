@@ -2,4 +2,5 @@
 set -e
 yay -S --noconfirm kora-icon-theme-git
 
-find -type f -name "*fcitx-unikey*" | xargs sudo rm -rf
+find /usr/share/icons/kora -type f -name "*fcitx-unikey*" | xargs sudo rm -rf
+sudo gtk-update-icon-cache /usr/share/icons/kora
