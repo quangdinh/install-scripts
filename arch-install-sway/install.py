@@ -21,7 +21,8 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def add_gnome_keyring(file):
+def add_gnome_keyring():
+  file = "/mnt/etc/pam.d/login"
   with open(file, "r") as f:
     lines = f.readlines()
     newLines = []
@@ -37,6 +38,11 @@ def add_gnome_keyring(file):
   with open(file, "w") as f:
     out = "\n".join(newLines)
     f.write(out)
+  file = "/mnt/etc/pam.d/passwd"
+  with open(file, "a") as f:
+    f.write("\npassword   optional    pam_gnome_keyring.so"
+
+  
 
     
 
@@ -1201,8 +1207,8 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "polkit vim neofetch htop gnome-keyring brightnessctl")
-add_gnome_keyring("/mnt/etc/pam.d/login")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch htop gnome-keyring brightnessctl")
+add_gnome_keyring()
 print("Done")
 
 if yubi_key:
@@ -1239,7 +1245,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep kanshi")
   install_brightness()
   install_swaylock()
   install_screenshot()
@@ -1252,7 +1258,7 @@ if xwm:
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "alacritty firefox imv xdg-desktop-portal-wlr thunar thunar-volman thunar-archive-plugin file-roller xreader gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "alacritty firefox imv xdg-desktop-portal-wlr thunar thunar-volman thunar-archive-plugin file-roller xreader seahorse gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
