@@ -31,16 +31,16 @@ def add_gnome_keyring():
       if "pam_gnome_keyring.so" in line:
         return
       if line.startswith("account"):
-        newLines.append("auth	   optional     pam_gnome_keyring.so")
-      newLines.append(line)
+        newLines.append("auth       optional     pam_gnome_keyring.so")
       if line.startswith("password"):
         newLines.append("session    optional     pam_gnome_keyring.so auto_start")
+      newLines.append(line)
   with open(file, "w") as f:
     out = "\n".join(newLines)
     f.write(out)
   file = "/mnt/etc/pam.d/passwd"
   with open(file, "a") as f:
-    f.write("password   optional    pam_gnome_keyring.so\n")
+    f.write("password	optional	pam_gnome_keyring.so\n")
 
 
 def request_input(prompt):
@@ -423,9 +423,9 @@ bindsym XF86AudioPlay exec playerctl play-pause
 bindsym XF86AudioNext exec playerctl next
 bindsym XF86AudioPrev exec playerctl previous
 
-bindsym XF86AudioRaiseVolume exec volumectl up
-bindsym XF86AudioLowerVolume exec volumectl down
-bindsym XF86AudioMute exec volumectl toggle
+bindsym XF86AudioRaiseVolume exec pulsemixer --change-volume +1 --max-volume 100
+bindsym XF86AudioLowerVolume exec pulsemixer --change-volume -1 --max-volume 100
+bindsym XF86AudioMute exec volumectl pulsemixer --toggle-mute
 bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 """
   directory = "/mnt/etc/sway/config.d"
@@ -590,7 +590,7 @@ def install_startsway():
   script="""#!/bin/sh
 
 if command -v gnome-keyring-daemon &>/dev/null; then
-  eval \$(gnome-keyring-daemon --start 2>/dev/null)
+  eval $(gnome-keyring-daemon --start 2>/dev/null)
   export SSH_AUTH_SOCK
 fi
 
@@ -604,8 +604,8 @@ export QT_QPA_PLATFORMTHEME=qt5ct
 export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
 export _JAVA_AWT_WM_NONREPARENTING=1
 
-if [[ -f \$HOME/.xprofile ]]; then
-	source \$HOME/.xprofile
+if [[ -f $HOME/.xprofile ]]; then
+	source $HOME/.xprofile
 fi
 
 exec sway
@@ -1013,6 +1013,11 @@ q = request_input("Do you want to use Yubikey? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   yubi_key = False
 
+clear()
+sound_apps = True
+q = request_input("Do you want to install Sound System and mpd? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  sound_apps = False
 
 xwm = True
 q = request_input("Do you want to install SwayVM? [Yes]/No ")
@@ -1064,6 +1069,7 @@ print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
 # print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
+print("{:>35}{:<1} {:<50}".format("Sound System & mpd", ":", string_bool(sound_apps)))
 print("{:>35}{:<1} {:<50}".format("SwayVM", ":", string_bool(xwm)))
 if xwm:
   print("{:>35}{:<1} {:<50}".format("X utilities", ":", string_bool(x_utils)))
@@ -1216,17 +1222,6 @@ if use_zsh:
   run_chroot("/usr/bin/sed", "-i -e", '"s/SHELL=.*/\SHELL=\/usr\/bin\/zsh/g"', "/etc/default/useradd")
   print("Done")
 
-print_task("Installing Sudo")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
-run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
-print("Done")
-
-print_task("Setup user account")
-run_chroot("/usr/bin/useradd", "-G wheel,input,lp,video -m -c \"" + user_label  + "\"", user_name)
-run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
-run_chroot("passwd -l root")
-print("Done")
-
 print_task("Installing kernel")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "linux-lts linux-firmware")
 print("Done")
@@ -1303,7 +1298,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch htop gnome-keyring brightnessctl")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch htop gnome-keyring brightnessctl ranger atool unrar unzip zip")
 add_gnome_keyring()
 print("Done")
 
@@ -1317,6 +1312,14 @@ if bluetooth:
   print_task("Installing Bluetooth")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "bluez bluez-utils")
   run_chroot("/usr/bin/systemctl", "enable", "bluetooth")
+  print("Done")
+
+if sound_apps:
+  print_task("Installing Sound applications")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpd ncmpcpp pulseaudio sof-firmware pulsemixer playerctl")
+  install_audio()
+  if bluetooth:
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
   print("Done")
 
 if xwm:
@@ -1341,7 +1344,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep alacritty")
   install_brightness()
   install_swaylock()
   install_screenshot()
@@ -1356,17 +1359,11 @@ if xwm:
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "alacritty firefox imv xdg-desktop-portal-wlr thunar thunar-volman thunar-archive-plugin file-roller xreader seahorse gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox imv xdg-desktop-portal-wlr xreader xorg-xlsclients")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv mpd ncmpcpp pulseaudio pavucontrol sof-firmware pulsemixer")
-    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/volumectl.pkg.tar.zst", "-o", "/volumectl.pkg.tar.zst")
-    run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
-    run_chroot("rm", "-rf", "/*.pkg.tar.zst")
-    install_audio()
-    if bluetooth:
-      run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpv")
     print("Done")
   
 if git_base:
@@ -1382,6 +1379,17 @@ if yay:
   run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
   run_chroot("rm", "-rf", "/*.pkg.tar.zst")
   print("Done")
+
+print_task("Installing Sudo")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
+run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
+print("Done")
+
+print_task("Setup user account")
+run_chroot("/usr/bin/useradd", "-G wheel,input,lp,video -m -c \"" + user_label  + "\"", user_name)
+run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
+run_chroot("passwd -l root")
+print("Done")
 
 print_task("Copying after_install scripts")
 run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
