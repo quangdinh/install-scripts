@@ -33,3 +33,9 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   sudo pacman -S --noconfirm libreoffice-fresh
 fi
+
+read -p "Do you want to install Gimp? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  sudo pacman -S --noconfirm gimp
+fi

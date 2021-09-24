@@ -434,6 +434,69 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
   with open(directory+"/audio.conf", "w") as f:
     f.write(script)
 
+def install_swayoutput():
+  script = """#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import json
+import sys
+
+def get_output(outputs, name):
+  for output in outputs:
+    if output["name"] == name:
+      return output
+  return None
+
+def get_outputs(name):
+  outputs_json = "".join(os.popen("swaymsg -r -t get_outputs").readlines())
+  outputs = json.loads(outputs_json)
+  output = get_output(outputs, name)
+
+  if output:
+    return True, output["active"]
+
+  return False, False
+
+def print_usage():
+  print("Usage: sway_output.py [name] [on/off/toggle]")
+
+if len(sys.argv) != 3:
+  print_usage()
+  sys.exit(0)
+
+
+output = sys.argv[1]
+command = sys.argv[2].lower()
+
+if command != "on" and command != "off" and command != "toggle":
+  print_usage()
+  sys.exit(0)
+
+
+(valid, active) = get_outputs(output)
+
+if not valid:
+  print("Output \"" + output + "\" is not valid")
+  sys.exit(0)
+
+if command == "on":
+  action = "enable"
+if command == "off":
+  action = "disable"
+if command == "toggle":
+  action = "disable" if active else "enable"
+
+print("Turning " + ("on" if action == "enable" else "off") + " output " + output)
+os.system("swaymsg output " +  output + " " +  action)
+"""
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/swayoutput", "w") as f:
+    f.write(script)
+  run_command("chmod", "+x", directory+"/swayoutput")
+
 def install_powermenu():
   script = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -463,12 +526,12 @@ def run_menu():
 
 run_menu()
 """
-  directory = "/mnt/etc/wofi"
+  directory = "/mnt/usr/bin"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/powermenu.py", "w") as f:
+  with open(directory+"/wofipowermenu", "w") as f:
     f.write(script)
-  run_command("chmod", "+x", directory+"/powermenu.py")
+  run_command("chmod", "+x", directory+"/wofipowermenu")
 
 def install_gammastep():
   script = """#!/bin/sh
@@ -516,16 +579,46 @@ gsettings set "$gnome_schema" icon-theme "$icon_theme"
 gsettings set "$gnome_schema" cursor-theme "$cursor_theme"
 gsettings set "$gnome_schema" font-name "$font_name"
 """
-  directory = "/mnt/etc/sway"
+  directory = "/mnt/usr/bin"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/gsettings", "w") as f:
+  with open(directory+"/swaygsettings", "w") as f:
     f.write(script)
-  run_command("chmod", "+x", "/mnt/etc/sway/gsettings")
+  run_command("chmod", "+x", directory+"/swaygsettings")
+
+def install_startsway():
+  script="""#!/bin/sh
+
+if command -v gnome-keyring-daemon &>/dev/null; then
+  eval \$(gnome-keyring-daemon --start 2>/dev/null)
+  export SSH_AUTH_SOCK
+fi
+
+export XDG_SESSION_TYPE=wayland
+export DESKTOP_SESSION=sway
+export XDG_SESSION_DESKTOP=sway
+export XDG_CURRENT_DESKTOP=sway
+export MOZ_ENABLE_WAYLAND=1
+export QT_QPA_PLATFORM=wayland
+export QT_QPA_PLATFORMTHEME=qt5ct
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+if [[ -f \$HOME/.xprofile ]]; then
+	source \$HOME/.xprofile
+fi
+
+exec sway
+"""
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/startsway", "w") as f:
+    f.write(script)
+  run_command("chmod", "+x", directory+"/startsway")
 
 def install_sway_config():
-  script = """
-### Variables
+  script = """### Variables
   # Logo key. Use Mod1 for Alt.
   set $mod Mod4
 
@@ -581,7 +674,7 @@ def install_sway_config():
   bindsym $mod+Shift+c reload
 
   # Exit sway (logs you out of your Wayland session)
-  bindsym $mod+Shift+e exec /etc/wofi/powermenu.py
+  bindsym $mod+Shift+e exec /usr/bin/wofipowermenu
 
   # Lock screen
   bindsym $mod+Alt+l exec $locknow
@@ -708,18 +801,20 @@ def install_sway_config():
 
 ### Styling
   # Gaps
-  gaps inner 10
+  gaps inner 5
   gaps outer 0
   smart_gaps on
 
   # Borders
-  default_border pixel 2 
-  for_window [class=".*"] border pixel 2 
+  default_border pixel 3
+  for_window [class=".*"] border pixel 3
 
   #Colors
-  # Class           Border    BG        text      indicator child border
-  client.focused    #78B6E6   #132C3E   #ffffff   #FFFFFF   #78B6E6
-  client.unfocused  #132C3E   #132C3E   #ffffff   #FFFF7D   #132C3E
+  # Class                   Border		  BG          text        indicator   child border
+  client.focused            #ffffff66	  #000000bb   #ffffff     #ffffffee   #ffffff66
+  client.unfocused          #00000066	  #00000088   #ffffff     #000000ee   #00000066
+  client.focused_inactive   #ffffff44	  #00000099   #ffffff     #ffffffaa   #ffffff44
+  client.background         se#000000bb
 
 
 ### Options
@@ -727,9 +822,7 @@ def install_sway_config():
 
 ### Autostart
   exec_always "pkill mako; mako"
-  exec_always /etc/sway/gsettings
-  exec_always "pkill kanshi; kanshi"
-
+  exec_always /usr/bin/swaygsettings
 """
   directory = "/mnt/etc/sway"
   if not os.path.exists(directory):
@@ -739,8 +832,7 @@ def install_sway_config():
 
 
 def install_wofi_styles():
-  script = """
-window {
+  script = """window {
   font-family: "Droid Sans", "Font Awesome 5 Free", Helvetica, Arial, sans-serif;
   margin: 0px;
   border: 1px solid #000813;
@@ -788,9 +880,7 @@ window {
     f.write(script)
 
 def install_swaylock():
-  script = """
-exec swayidle -w timeout 300 'swaylock -f -C /etc/sway/swaylock.conf' timeout 301 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' before-sleep 'swaylock -f -C /etc/sway/swaylock.conf'
-
+  script = """exec "pkill swayidle; swayidle -w timeout 300 'systemctl suspend' before-sleep 'swaylock -f -C /etc/sway/swaylock.conf'"
 set $locknow swaylock -f -C /etc/sway/swaylock.conf
 """
   directory = "/mnt/etc/sway/config.d"
@@ -799,8 +889,7 @@ set $locknow swaylock -f -C /etc/sway/swaylock.conf
   with open(directory+"/swayidle.conf", "w") as f:
     f.write(script)
   
-  script = """
-ignore-empty-password
+  script = """ignore-empty-password
 
 color=040A0F
 indicator-idle-visible
@@ -839,8 +928,7 @@ ring-wrong-color=AA3F39
 
 
 def hide_system_apps():
-  shell_script = """
-#!/usr/bin/env bash
+  shell_script = """#!/usr/bin/env bash
 
 sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo xfce4-about)
 dir="/mnt/usr/share/applications"
@@ -1253,7 +1341,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep kanshi")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep")
   install_brightness()
   install_swaylock()
   install_screenshot()
@@ -1262,6 +1350,8 @@ if xwm:
   install_gsettings()
   install_gammastep()
   install_powermenu()
+  install_startsway()
+  install_swayoutput()
   print("Done")
 
   if x_utils:
