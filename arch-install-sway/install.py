@@ -425,7 +425,7 @@ bindsym XF86AudioPrev exec playerctl previous
 
 bindsym XF86AudioRaiseVolume exec pulsemixer --change-volume +1 --max-volume 100
 bindsym XF86AudioLowerVolume exec pulsemixer --change-volume -1 --max-volume 100
-bindsym XF86AudioMute exec volumectl pulsemixer --toggle-mute
+bindsym XF86AudioMute exec pulsemixer --toggle-mute
 bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 """
   directory = "/mnt/etc/sway/config.d"
