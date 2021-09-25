@@ -418,10 +418,10 @@ bindsym Control+Shift+Print exec grim -g "$(slurp)" - | wl-copy
 
 def install_audio():
   script = """
-bindsym XF86AudioStop exec playerctl stop
-bindsym XF86AudioPlay exec playerctl play-pause
-bindsym XF86AudioNext exec playerctl next
-bindsym XF86AudioPrev exec playerctl previous
+bindsym XF86AudioStop exec mpc stop
+bindsym XF86AudioPlay exec mpc play
+bindsym XF86AudioNext exec mpc next
+bindsym XF86AudioPrev exec mpc prev
 
 bindsym XF86AudioRaiseVolume exec pulsemixer --change-volume +1 --max-volume 100
 bindsym XF86AudioLowerVolume exec pulsemixer --change-volume -1 --max-volume 100
@@ -1316,7 +1316,7 @@ if bluetooth:
 
 if sound_apps:
   print_task("Installing Sound applications")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpd ncmpcpp pulseaudio sof-firmware pulsemixer playerctl")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpd mpc ncmpcpp pulseaudio sof-firmware pulsemixer")
   install_audio()
   if bluetooth:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
