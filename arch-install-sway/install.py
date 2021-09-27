@@ -391,8 +391,8 @@ def format_root(partition, fs):
 
 def install_brightness():
   script = """
-bindsym XF86MonBrightnessDown exec brightnessctl set 2%-
-bindsym XF86MonBrightnessUp exec brightnessctl set +2%
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym XF86MonBrightnessUp exec brightnessctl set +5%
 """
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
@@ -629,7 +629,7 @@ def install_sway_config():
   set $right l
 
   # Terminal emulator
-  set $term alacritty
+  set $term kitty 
 
   # Launcher
   set $menu wofi --show drun --prompt "Search" --allow-images --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
@@ -809,19 +809,18 @@ def install_sway_config():
   default_border pixel 3
   for_window [class=".*"] border pixel 3
 
-  #Colors
-  # Class                   Border		  BG          text        indicator   child border
-  client.focused            #ffffff66	  #000000bb   #ffffff     #ffffffee   #ffffff66
-  client.unfocused          #00000066	  #00000088   #ffffff     #000000ee   #00000066
-  client.focused_inactive   #ffffff44	  #00000099   #ffffff     #ffffffaa   #ffffff44
-  client.background         se#000000bb
+### Colors
+  # Class                   Border      BG          Text        Indicator   Child border
+  client.focused            #c5c8c6bf   #1d1f21bb   #ffffff     #fffffff2   #c5c8c6bf
+  client.unfocused          #1d1f2166   #1d1f2188   #ffffff     #000000ee   #1d1f2166
+  client.focused_inactive   #c5c8c644   #1d1f2199   #ffffff     #ffffff88   #c5c8c644
+  client.background         #1d1f21f2
 
 
 ### Options
   focus_follows_mouse no
 
 ### Autostart
-  exec_always "pkill mako; mako"
   exec_always /usr/bin/swaygsettings
 """
   directory = "/mnt/etc/sway"
@@ -835,27 +834,28 @@ def install_wofi_styles():
   script = """window {
   font-family: "Droid Sans", "Font Awesome 5 Free", Helvetica, Arial, sans-serif;
   margin: 0px;
-  border: 1px solid #000813;
-  background-color: #282a36;
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  background-color: rgba(29, 31, 33, 0.95);
+  border-radius: 10px;
 }
 
 #input {
   margin: 5px;
   border: none;
   color: #f8f8f2;
-  background-color: #44475a;
+  background-color: rgba(55, 59, 65, 0.95);
 }
 
 #inner-box {
   margin: 5px;
   border: none;
-  background-color: #282a36;
+  background-color: transparent;
 }
 
 #outer-box {
   margin: 5px;
   border: none;
-  background-color: #282a36;
+  background-color: transparent;
 }
 
 #scroll {
@@ -866,11 +866,21 @@ def install_wofi_styles():
 #text {
   margin: 5px;
   border: none;
-  color: #f8f8f2;
+  color: #c5c8c6;
+}
+
+#entry {
+  border: none;
+}
+
+#entry:focus {
+  border: none;
 }
 
 #entry:selected {
-  background-color: #44475a;
+  background-color: rgba(55, 59, 65, 0.95);
+  border-radius: 5px;
+  border: none;
 }
 """
   directory = "/mnt/etc/wofi"
@@ -891,34 +901,34 @@ set $locknow swaylock -f -C /etc/sway/swaylock.conf
   
   script = """ignore-empty-password
 
-color=040A0F
+color=1d1f21
 indicator-idle-visible
 indicator-radius=150
 indicator-thickness=30
 
-inside-color=040A0F
-inside-clear-color=040A0F
-inside-ver-color=040A0F
-inside-wrong-color=040A0F
+inside-color=1d1f21
+inside-clear-color=1d1f21
+inside-ver-color=1d1f21
+inside-wrong-color=1d1f21
 
-key-hl-color=78B5E6AA
-bs-hl-color=AA3F39AA
+key-hl-color=7aa6daaa
+bs-hl-color=d54e53aa
 
-separator-color=040A0F
+separator-color=55555555
 
-line-color=132C3E
+line-color=1d1f21
 line-uses-ring
 
-text-color=46779C
-text-clear-color=46779C
-text-caps-lock-color=46779C
-text-ver-color=78B6E6
-text-wrong-color=AA3F39
+text-color=81a2be
+text-clear-color=b5bd68
+text-caps-lock-color=f0c674
+text-ver-color=81a2be
+text-wrong-color=cc6666
 
-ring-color=132C3E55
-ring-ver-color=78B6E6
-ring-clear-color=132C3E11
-ring-wrong-color=AA3F39
+ring-color=81a2be55
+ring-ver-color=81a2be
+ring-clear-color=b5bd6811
+ring-wrong-color=cc6666
 """
   directory = "/mnt/etc/sway"
   if not os.path.exists(directory):
@@ -1344,7 +1354,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep alacritty")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep kitty python-pillow imagemagick")
   install_brightness()
   install_swaylock()
   install_screenshot()
