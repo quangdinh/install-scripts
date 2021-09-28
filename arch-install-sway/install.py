@@ -1039,10 +1039,9 @@ use_zsh = True
 
 clear()
 print("Setup your user account, this account will have sudo access")
-print("Default password: \"arch\"")
 user_name = ask_username()
 user_label = request_input("User Fullname: ")
-user_password = "arch"
+user_password = ask_password()
 
 plymouth = False
 
@@ -1434,7 +1433,6 @@ print("Done")
 print_task("Setup user account")
 run_chroot("/usr/bin/useradd", "-G wheel,input,lp,video -m -c \"" + user_label  + "\"", user_name)
 run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
-run_chroot("passwd -e " + user_name)
 run_chroot("passwd -l root")
 print("Done")
 
