@@ -434,6 +434,7 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
   with open(directory+"/audio.conf", "w") as f:
     f.write(script)
 
+
 def install_swayoutput():
   script = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -448,10 +449,13 @@ def get_output(outputs, name):
       return output
   return None
 
-def get_outputs(name):
+def get_all_outputs():
   outputs_json = "".join(os.popen("swaymsg -r -t get_outputs").readlines())
   outputs = json.loads(outputs_json)
-  output = get_output(outputs, name)
+  return outputs
+
+def get_outputs(name):
+  output = get_output(get_all_outputs(), name)
 
   if output:
     return True, output["active"]
@@ -460,6 +464,28 @@ def get_outputs(name):
 
 def print_usage():
   print("Usage: sway_output.py [name] [on/off/toggle]")
+
+
+def auto_outputs(output_with_lid):
+  outputs = get_all_outputs()
+  if len(outputs) == 1:
+    os.system("swaymsg output " + outputs[0]["name"] + " enable")
+    sys.exit(0)
+  
+  for output in outputs:
+    name = output["name"]
+    action = "enable"
+    if output_with_lid == name:
+      lid_state = os.popen("cat /proc/acpi/button/lid/*/state | grep -o 'closed\|open'").readline().strip()
+      action = "disable" if lid_state == "closed" else "enable"
+
+    os.system("swaymsg output " + name + " " + action)
+
+
+if len(sys.argv) >= 2 and sys.argv[1] == "auto":
+  output_with_lid = sys.argv[2] if len(sys.argv) >= 3 else None
+  auto_outputs(output_with_lid)
+  sys.exit(0)
 
 if len(sys.argv) != 3:
   print_usage()
@@ -477,7 +503,7 @@ if command != "on" and command != "off" and command != "toggle":
 (valid, active) = get_outputs(output)
 
 if not valid:
-  print("Output \"" + output + "\" is not valid")
+  print("Output "" + output + "" is not valid")
   sys.exit(0)
 
 if command == "on":
@@ -597,7 +623,7 @@ fi
 export XDG_SESSION_TYPE=wayland
 export DESKTOP_SESSION=sway
 export XDG_SESSION_DESKTOP=sway
-export XDG_CURRENT_DESKTOP=sway
+export XDG_CURRENT_DESKTOP=Unity
 export MOZ_ENABLE_WAYLAND=1
 export QT_QPA_PLATFORM=wayland
 export QT_QPA_PLATFORMTHEME=qt5ct
@@ -890,7 +916,7 @@ def install_wofi_styles():
     f.write(script)
 
 def install_swaylock():
-  script = """exec "pkill swayidle; swayidle -w timeout 300 'systemctl suspend' before-sleep 'swaylock -f -C /etc/sway/swaylock.conf'"
+  script = """exec "pkill swayidle; swayidle -w timeout 300 'systemctl suspend' resume '/usr/bin/swayoutput auto eDP-1' before-sleep '/usr/bin/swayoutput auto eDP-1; swaylock -f -C /etc/sway/swaylock.conf'"
 set $locknow swaylock -f -C /etc/sway/swaylock.conf
 """
   directory = "/mnt/etc/sway/config.d"
@@ -1365,6 +1391,7 @@ if xwm:
   install_powermenu()
   install_startsway()
   install_swayoutput()
+  install_swayhotplugoutput()
   print("Done")
 
   if x_utils:
