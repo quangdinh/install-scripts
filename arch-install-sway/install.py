@@ -587,6 +587,19 @@ fi
     f.write(script)
   run_command("chmod", "+x", "/mnt/etc/sway/gammastep.sh")
 
+def install_gnomekeyring_profile():
+  script = """
+  # Start gnome-keyring-daemon on login
+if command -v gnome-keyring-daemon &>/dev/null; then
+  eval $(gnome-keyring-daemon --start 2>/dev/null)
+  export SSH_AUTH_SOCK
+fi
+"""
+  directory = "/mnt/etc/profile.d"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  with open(directory+"/gnome-keyring-daemon.sh", "w") as f:
+    f.write(script)
 
 def install_gsettings():
   script = """#!/bin/sh
@@ -614,11 +627,6 @@ gsettings set "$gnome_schema" font-name "$font_name"
 
 def install_startsway():
   script="""#!/bin/sh
-
-if command -v gnome-keyring-daemon &>/dev/null; then
-  eval $(gnome-keyring-daemon --start 2>/dev/null)
-  export SSH_AUTH_SOCK
-fi
 
 export XDG_SESSION_TYPE=wayland
 export DESKTOP_SESSION=sway
@@ -658,7 +666,7 @@ def install_sway_config():
   set $term kitty 
 
   # Launcher
-  set $menu wofi --show drun --prompt "Search" --allow-images --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
+  set $menu wofi -i --hide-scroll --show drun --prompt "Search" --allow-images --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
 ### Include configs
   include /etc/sway/config.d/*.conf
 
@@ -1031,9 +1039,10 @@ use_zsh = True
 
 clear()
 print("Setup your user account, this account will have sudo access")
+print("Default password: \"arch\"")
 user_name = ask_username()
 user_label = request_input("User Fullname: ")
-user_password = ask_password()
+user_password = "arch"
 
 plymouth = False
 
@@ -1049,7 +1058,6 @@ q = request_input("Do you want to use Yubikey? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   yubi_key = False
 
-clear()
 sound_apps = True
 q = request_input("Do you want to install Sound System and mpd? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
@@ -1067,8 +1075,8 @@ if xwm:
   if q.lower() == "no" or q.lower() == "n":
     x_utils = False
 
-x_multimedia = xwm
-if xwm:
+x_multimedia = xwm and sound_apps
+if xwm and sound_apps:
   q = request_input("Do you want to install X multimedia applications? [Yes]/No ")
   if q.lower() == "no" or q.lower() == "n":
     x_multimedia = False
@@ -1391,7 +1399,7 @@ if xwm:
   install_powermenu()
   install_startsway()
   install_swayoutput()
-  install_swayhotplugoutput()
+  install_gnomekeyring_profile()
   print("Done")
 
   if x_utils:
@@ -1420,11 +1428,13 @@ if yay:
 print_task("Installing Sudo")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
 run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
+run_chroot("echo \"%wheel ALL=(ALL) NOPASSWD: /usr/bin/mount, /usr/bin/umount\" >> /etc/sudoers")
 print("Done")
 
 print_task("Setup user account")
 run_chroot("/usr/bin/useradd", "-G wheel,input,lp,video -m -c \"" + user_label  + "\"", user_name)
 run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
+run_chroot("passwd -e " + user_name)
 run_chroot("passwd -l root")
 print("Done")
 
