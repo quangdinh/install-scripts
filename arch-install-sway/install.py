@@ -390,613 +390,103 @@ def format_root(partition, fs):
     run_command("/usr/bin/mkfs.ext4", partition)
 
 def install_brightness():
-  script = """
-bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
-bindsym XF86MonBrightnessUp exec brightnessctl set +5%
-"""
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/brightness.conf", "w") as f:
-    f.write(script)
+  run_command("cp", "./sources/brightness.conf", directory+"/brightness.conf")
 
 def install_screenshot():
-  script = """
-bindsym Print exec grim $(xdg-user-dir PICTURES)/$(date +'Screenshot_%Y-%m-%d_%H%M%S.png')
-bindsym Alt+Print exec grim -g "$(swaymsg -t get_tree | jq -j '.. | select(.type?) | select(.focused).rect | "\(.x),\(.y) \(.width)x\(.height)"')" $(xdg-user-dir PICTURES)/$(date +'Screenshot_%Y-%m-%d_%H%M%S.png')
-bindsym Shift+Print exec grim -g "$(slurp)" $(xdg-user-dir PICTURES)/$(date +'Screenshot_%Y-%m-%d_%H%M%S.png')
-
-bindsym Control+Print exec grim - | wl-copy
-bindsym Control+Alt+Print exec grim -g "$(swaymsg -t get_tree | jq -j '.. | select(.type?) | select(.focused).rect | "\(.x),\(.y) \(.width)x\(.height)"')" - | wl-copy
-bindsym Control+Shift+Print exec grim -g "$(slurp)" - | wl-copy 
-"""
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/screenshot.conf", "w") as f:
-    f.write(script)
+  run_command("cp", "./sources/screenshot.conf", directory+"/screenshot.conf")
+
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/screenshot.sh", directory+"/screenshot.sh")
+  run_command("chmod", "+x", directory+"/screenshot.sh")
 
 def install_audio():
-  script = """
-bindsym XF86AudioStop exec mpc stop
-bindsym XF86AudioPlay exec mpc play
-bindsym XF86AudioNext exec mpc next
-bindsym XF86AudioPrev exec mpc prev
-
-bindsym XF86AudioRaiseVolume exec pulsemixer --change-volume +1 --max-volume 100
-bindsym XF86AudioLowerVolume exec pulsemixer --change-volume -1 --max-volume 100
-bindsym XF86AudioMute exec pulsemixer --toggle-mute
-bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
-"""
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/audio.conf", "w") as f:
-    f.write(script)
+  run_command("cp", "./sources/audio.conf", directory+"/audio.conf")
 
 
 def install_swayoutput():
-  script = """#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-import os
-import json
-import sys
-
-def get_output(outputs, name):
-  for output in outputs:
-    if output["name"] == name:
-      return output
-  return None
-
-def get_all_outputs():
-  outputs_json = "".join(os.popen("swaymsg -r -t get_outputs").readlines())
-  outputs = json.loads(outputs_json)
-  return outputs
-
-def get_outputs(name):
-  output = get_output(get_all_outputs(), name)
-
-  if output:
-    return True, output["active"]
-
-  return False, False
-
-def print_usage():
-  print("Usage: sway_output.py [name] [on/off/toggle]")
-
-
-def auto_outputs(output_with_lid):
-  outputs = get_all_outputs()
-  if len(outputs) == 1:
-    os.system("swaymsg output " + outputs[0]["name"] + " enable")
-    sys.exit(0)
-  
-  for output in outputs:
-    name = output["name"]
-    action = "enable"
-    if output_with_lid == name:
-      lid_state = os.popen("cat /proc/acpi/button/lid/*/state | grep -o 'closed\|open'").readline().strip()
-      action = "disable" if lid_state == "closed" else "enable"
-
-    os.system("swaymsg output " + name + " " + action)
-
-
-if len(sys.argv) >= 2 and sys.argv[1] == "auto":
-  output_with_lid = sys.argv[2] if len(sys.argv) >= 3 else None
-  auto_outputs(output_with_lid)
-  sys.exit(0)
-
-if len(sys.argv) != 3:
-  print_usage()
-  sys.exit(0)
-
-
-output = sys.argv[1]
-command = sys.argv[2].lower()
-
-if command != "on" and command != "off" and command != "toggle":
-  print_usage()
-  sys.exit(0)
-
-
-(valid, active) = get_outputs(output)
-
-if not valid:
-  print("Output "" + output + "" is not valid")
-  sys.exit(0)
-
-if command == "on":
-  action = "enable"
-if command == "off":
-  action = "disable"
-if command == "toggle":
-  action = "disable" if active else "enable"
-
-print("Turning " + ("on" if action == "enable" else "off") + " output " + output)
-os.system("swaymsg output " +  output + " " +  action)
-"""
   directory = "/mnt/usr/bin"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/swayoutput", "w") as f:
-    f.write(script)
-  run_command("chmod", "+x", directory+"/swayoutput")
+  run_command("cp", "./sources/swayoutput.py", directory+"/swayoutput.py")
+  run_command("chmod", "+x", directory+"/swayoutput.py")
 
 def install_powermenu():
-  script = """#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-import os
-
-def run_menu():
-  keys = (
-    "\uf023   Log Out",
-    "\uf186   Suspend",
-    "\uf2dc   Hibernate",
-    "\uf021   Reboot",
-    "\uf011   Shutdown",
-  )
-
-  actions = (
-    "swaymsg exit",
-    "systemctl suspend",
-    "systemctl hibernate",
-    "systemctl reboot",
-    "systemctl poweroff"
-  )
-
-  options = "\\n".join(keys)
-  choice = os.popen("echo -e '" + options + "' | wofi --dmenu --insensitive --prompt 'Power Menu' --style /etc/wofi/styles.css --width 200 --height 175 --cache-file /dev/null").readline().strip()
-  if choice in keys:
-    os.popen(actions[keys.index(choice)])
-
-run_menu()
-"""
   directory = "/mnt/usr/bin"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/wofipowermenu", "w") as f:
-    f.write(script)
-  run_command("chmod", "+x", directory+"/wofipowermenu")
+  run_command("cp", "./sources/wofipowermenu.py", directory+"/wofipowermenu.py")
+  run_command("chmod", "+x", directory+"/wofipowermenu.py")
 
 def install_gammastep():
-  script = """#!/bin/sh
-
-pid=$(pgrep gammastep)
-
-if [[ $1 = "toggle" ]]; then
-	if pgrep -x "gammastep" > /dev/null; then
-		kill -9 $(pgrep -x "gammastep");
-	else
-		gammastep -O ${GAMMASTEP_NIGHT:-3500} &
-	fi
-fi
-
-if pgrep -x "gammastep" > /dev/null; then
-	echo ""
-	echo "Nightlight is on"
-else
-	echo ""
-	echo "Nightlight is off"
-fi
-"""
-  directory = "/mnt/etc/sway"
+  directory = "/mnt/usr/bin"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/gammastep.sh", "w") as f:
-    f.write(script)
-  run_command("chmod", "+x", "/mnt/etc/sway/gammastep.sh")
+  run_command("cp", "./sources/gammastep.sh", directory+"/gammastep.sh")
+  run_command("chmod", "+x", directory+"/gammastep.sh")
 
 def install_gnomekeyring_profile():
-  script = """
-  # Start gnome-keyring-daemon on login
-if command -v gnome-keyring-daemon &>/dev/null; then
-  eval $(gnome-keyring-daemon --start 2>/dev/null)
-  export SSH_AUTH_SOCK
-fi
-"""
   directory = "/mnt/etc/profile.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/gnome-keyring-daemon.sh", "w") as f:
-    f.write(script)
+  run_command("cp", "./sources/gnome-keyring-daemon.sh", directory+"/gnome-keyring-daemon.sh")
 
 def install_gsettings():
-  script = """#!/bin/sh
-
-# usage: import-gsettings
-config="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini"
-if [ ! -f "$config" ]; then exit 1; fi
-
-gnome_schema="org.gnome.desktop.interface"
-gtk_theme="$(grep 'gtk-theme-name' "$config" | sed 's/.*\s*=\s*//')"
-icon_theme="$(grep 'gtk-icon-theme-name' "$config" | sed 's/.*\s*=\s*//')"
-cursor_theme="$(grep 'gtk-cursor-theme-name' "$config" | sed 's/.*\s*=\s*//')"
-font_name="$(grep 'gtk-font-name' "$config" | sed 's/.*\s*=\s*//')"
-gsettings set "$gnome_schema" gtk-theme "$gtk_theme"
-gsettings set "$gnome_schema" icon-theme "$icon_theme"
-gsettings set "$gnome_schema" cursor-theme "$cursor_theme"
-gsettings set "$gnome_schema" font-name "$font_name"
-"""
   directory = "/mnt/usr/bin"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/swaygsettings", "w") as f:
-    f.write(script)
-  run_command("chmod", "+x", directory+"/swaygsettings")
+  run_command("cp", "./sources/swaygsettings.sh", directory+"/swaygsettings.sh")
+  run_command("chmod", "+x", directory+"/swaygsettings.sh")
 
 def install_startsway():
-  script="""#!/bin/sh
-
-export XDG_SESSION_TYPE=wayland
-export DESKTOP_SESSION=sway
-export XDG_SESSION_DESKTOP=sway
-export XDG_CURRENT_DESKTOP=Unity
-export MOZ_ENABLE_WAYLAND=1
-export QT_QPA_PLATFORM=wayland
-export QT_QPA_PLATFORMTHEME=qt5ct
-export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
-export _JAVA_AWT_WM_NONREPARENTING=1
-
-if [[ -f $HOME/.xprofile ]]; then
-	source $HOME/.xprofile
-fi
-
-exec sway
+  script="""
 """
   directory = "/mnt/usr/bin"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/startsway", "w") as f:
-    f.write(script)
-  run_command("chmod", "+x", directory+"/startsway")
+  run_command("cp", "./sources/startsway.sh", directory+"/startsway.sh")
+  run_command("chmod", "+x", directory+"/startsway.sh")
 
 def install_sway_config():
-  script = """### Variables
-  # Logo key. Use Mod1 for Alt.
-  set $mod Mod4
-
-  # Home row direction keys, like vim
-  set $left h
-  set $down j
-  set $up k
-  set $right l
-
-  # Terminal emulator
-  set $term kitty 
-
-  # Launcher
-  set $menu wofi -i --hide-scroll --show drun --prompt "Search" --allow-images --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
-### Include configs
-  include /etc/sway/config.d/*.conf
-
-### Output configuration
-  # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-  output * bg $(if [ -f $HOME/.config/wallpaper ]; then echo $HOME/.config/wallpaper; else echo "/usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png"; fi) fill
-
-### Input configuration
-  # Keyboard
-  input "type:keyboard" {           
-    xkb_options ctrl:nocaps 
-  }
-
-  # Touchpad
-  input "type:touchpad" {
-    dwt enabled
-    tap enabled
-  }
-  
-
-### Key bindings
-  # Start a terminal
-  bindsym $mod+Return exec $term
-
-  # Kill focused window
-  bindsym $mod+Shift+q kill
-
-  # Start your launcher
-  bindsym $mod+d exec $menu
-
-  # Drag floating windows by holding down $mod and left mouse button.
-  # Resize them with right mouse button + $mod.
-  # Despite the name, also works for non-floating windows.
-  # Change normal to inverse to use left mouse button for resizing and right
-  # mouse button for dragging.
-  floating_modifier $mod normal
-
-  # Reload the configuration file
-  bindsym $mod+Shift+c reload
-
-  # Exit sway (logs you out of your Wayland session)
-  bindsym $mod+Shift+e exec /usr/bin/wofipowermenu
-
-  # Lock screen
-  bindsym $mod+Alt+l exec $locknow
-
-  # Moving around:
-    # Move your focus around
-    bindsym $mod+$left focus left
-    bindsym $mod+$down focus down
-    bindsym $mod+$up focus up
-    bindsym $mod+$right focus right
-
-    # Or use $mod+[up|down|left|right]
-    bindsym $mod+Left focus left
-    bindsym $mod+Down focus down
-    bindsym $mod+Up focus up
-    bindsym $mod+Right focus right
-
-    # Move the focused window with the same, but add Shift
-    bindsym $mod+Shift+$left move left
-    bindsym $mod+Shift+$down move down
-    bindsym $mod+Shift+$up move up
-    bindsym $mod+Shift+$right move right
-
-    # Ditto, with arrow keys
-    bindsym $mod+Shift+Left move left
-    bindsym $mod+Shift+Down move down
-    bindsym $mod+Shift+Up move up
-    bindsym $mod+Shift+Right move right
-
-  # Workspaces:
-    # Switch to workspace
-    bindsym $mod+1 workspace number 1
-    bindsym $mod+2 workspace number 2
-    bindsym $mod+3 workspace number 3
-    bindsym $mod+4 workspace number 4
-    bindsym $mod+5 workspace number 5
-    bindsym $mod+6 workspace number 6
-    bindsym $mod+7 workspace number 7
-    bindsym $mod+8 workspace number 8
-    bindsym $mod+9 workspace number 9
-    bindsym $mod+0 workspace number 10
-
-    # Move focused container to workspace
-    bindsym $mod+Shift+1 move container to workspace number 1
-    bindsym $mod+Shift+2 move container to workspace number 2
-    bindsym $mod+Shift+3 move container to workspace number 3
-    bindsym $mod+Shift+4 move container to workspace number 4
-    bindsym $mod+Shift+5 move container to workspace number 5
-    bindsym $mod+Shift+6 move container to workspace number 6
-    bindsym $mod+Shift+7 move container to workspace number 7
-    bindsym $mod+Shift+8 move container to workspace number 8
-    bindsym $mod+Shift+9 move container to workspace number 9
-    bindsym $mod+Shift+0 move container to workspace number 10
-
-  # Layout stuff:
-    # You can "split" the current object of your focus with
-    # $mod+b or $mod+v, for horizontal and vertical splits
-    # respectively.
-    bindsym $mod+b splith
-    bindsym $mod+v splitv
-
-    # Switch the current container between different layout styles
-    bindsym $mod+s layout stacking
-    bindsym $mod+w layout tabbed
-    bindsym $mod+e layout toggle split
-
-    # Make the current focus fullscreen
-    bindsym $mod+f fullscreen
-
-    # Toggle the current focus between tiling and floating mode
-    bindsym $mod+Shift+space floating toggle
-
-    # Swap focus between the tiling area and the floating area
-    bindsym $mod+space focus mode_toggle
-
-    # Move focus to the parent container
-    bindsym $mod+a focus parent
-
-  # Scratchpad:
-    # Sway has a "scratchpad", which is a bag of holding for windows.
-    # You can send windows there and get them back later.
-
-    # Move the currently focused window to the scratchpad
-    bindsym $mod+Shift+minus move scratchpad
-
-    # Show the next scratchpad window or hide the focused scratchpad window.
-    # If there are multiple scratchpad windows, this command cycles through them.
-    bindsym $mod+minus scratchpad show
-
-  # Resize
-    mode "resize" {
-      bindsym $left resize shrink width 10px
-      bindsym $down resize grow height 10px
-      bindsym $up resize shrink height 10px
-      bindsym $right resize grow width 10px
-
-      bindsym Shift+$left resize shrink width 50px
-      bindsym Shift+$down resize grow height 50px
-      bindsym Shift+$up resize shrink height 50px
-      bindsym Shift+$right resize grow width 50px
-
-      # Ditto, with arrow keys
-      bindsym Left resize shrink width 10px
-      bindsym Down resize grow height 10px
-      bindsym Up resize shrink height 10px
-      bindsym Right resize grow width 10px
-
-      bindsym Shift+Left resize shrink width 50px
-      bindsym Shift+Down resize grow height 50px
-      bindsym Shift+Up resize shrink height 50px
-      bindsym Shift+Right resize grow width 50px
-      
-      # Return to default mode
-      bindsym Return mode "default"
-      bindsym Escape mode "default"
-    }
-    bindsym $mod+r mode "resize"
-
-### Bar
-  bar {
-    swaybar_command waybar
-  }
-
-
-### Styling
-  # Gaps
-  gaps inner 5
-  gaps outer 0
-  smart_gaps on
-
-  # Borders
-  default_border pixel 3
-  for_window [class=".*"] border pixel 3
-
-### Colors
-  # Class                   Border      BG          Text        Indicator   Child border
-  client.focused            #c5c8c6bf   #1d1f21bb   #ffffff     #fffffff2   #c5c8c6bf
-  client.unfocused          #1d1f2166   #1d1f2188   #ffffff     #000000ee   #1d1f2166
-  client.focused_inactive   #c5c8c644   #1d1f2199   #ffffff     #ffffff88   #c5c8c644
-  client.background         #1d1f21f2
-
-
-### Options
-  focus_follows_mouse no
-
-### Autostart
-  exec_always /usr/bin/swaygsettings
-"""
   directory = "/mnt/etc/sway"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/config", "w") as f:
-    f.write(script)
+  run_command("cp", "./sources/sway_config", directory+"/config")
 
 
 def install_wofi_styles():
-  script = """window {
-  font-family: "Droid Sans", "Font Awesome 5 Free", Helvetica, Arial, sans-serif;
-  margin: 0px;
-  border: 1px solid rgba(0, 0, 0, 0.9);
-  background-color: rgba(29, 31, 33, 0.95);
-  border-radius: 10px;
-}
-
-#input {
-  margin: 5px;
-  border: none;
-  color: #f8f8f2;
-  background-color: rgba(55, 59, 65, 0.95);
-}
-
-#inner-box {
-  margin: 5px;
-  border: none;
-  background-color: transparent;
-}
-
-#outer-box {
-  margin: 5px;
-  border: none;
-  background-color: transparent;
-}
-
-#scroll {
-  margin: 0px;
-  border: none;
-}
-
-#text {
-  margin: 5px;
-  border: none;
-  color: #c5c8c6;
-}
-
-#entry {
-  border: none;
-}
-
-#entry:focus {
-  border: none;
-}
-
-#entry:selected {
-  background-color: rgba(55, 59, 65, 0.95);
-  border-radius: 5px;
-  border: none;
-}
+  script = """
 """
   directory = "/mnt/etc/wofi"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/styles.css", "w") as f:
-    f.write(script)
+  run_command("cp", "./sources/waybar_styles.css", directory+"/styles.css")
 
 def install_swaylock():
-  script = """exec "pkill swayidle; swayidle -w timeout 300 'systemctl suspend' resume '/usr/bin/swayoutput auto eDP-1' before-sleep '/usr/bin/swayoutput auto eDP-1; swaylock -f -C /etc/sway/swaylock.conf'"
-set $locknow swaylock -f -C /etc/sway/swaylock.conf
-"""
   directory = "/mnt/etc/sway/config.d"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/swayidle.conf", "w") as f:
-    f.write(script)
+  run_command("cp", "./sources/swayidle.conf", directory+"/swayidle.conf")
   
-  script = """ignore-empty-password
 
-color=1d1f21
-indicator-idle-visible
-indicator-radius=150
-indicator-thickness=30
-
-inside-color=1d1f21
-inside-clear-color=1d1f21
-inside-ver-color=1d1f21
-inside-wrong-color=1d1f21
-
-key-hl-color=7aa6daaa
-bs-hl-color=d54e53aa
-
-separator-color=55555555
-
-line-color=1d1f21
-line-uses-ring
-
-text-color=81a2be
-text-clear-color=b5bd68
-text-caps-lock-color=f0c674
-text-ver-color=81a2be
-text-wrong-color=cc6666
-
-ring-color=81a2be55
-ring-ver-color=81a2be
-ring-clear-color=b5bd6811
-ring-wrong-color=cc6666
-"""
   directory = "/mnt/etc/sway"
   if not os.path.exists(directory):
     os.makedirs(directory)
-  with open(directory+"/swaylock.conf", "w") as f:
-    f.write(script)
+  run_command("cp", "./sources/swaylock.conf", directory+"/swaylock.conf")
 
 
 def hide_system_apps():
-  shell_script = """#!/usr/bin/env bash
-
-sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo xfce4-about)
-dir="/mnt/usr/share/applications"
-for app in ${sys_apps[@]}; do
-  file_name="$dir/$app.desktop"
-  echo -ne "Checking $app: "
-  if [ -f $file_name ]; then
-    var_hidden=$(cat $file_name | egrep -ohm1 "Hidden=(true|false)")
-    if [ -z $var_hidden ]; then
-      echo 'Hidden=true' >> $file_name
-      echo -ne "Set Hidden=true\\n"
-    else
-      sed -i -e 's/Hidden=.*/Hidden=true/g' $file_name
-      echo -ne "Update Hidden=true\\n"
-    fi
-  else
-    echo -ne "Skipping\\n"
-  fi
-done
-  """
-  with open("/tmp/hide_sys", "w") as f:
-    f.write(shell_script)
-  run_command("sh", "/tmp/hide_sys")
-  os.remove("/tmp/hide_sys")
+  run_command("sh", "./sources/hide_system_apps.sh")
 
 cpu = detect_cpu()
 vga = detect_vga().lower()
@@ -1341,13 +831,13 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch htop gnome-keyring brightnessctl ranger atool unrar unzip zip")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch bpytop gnome-keyring brightnessctl ranger atool unrar unzip zip")
 add_gnome_keyring()
 print("Done")
 
 if yubi_key:
-  print_task("Install Yubikey opensc & pam-u2f")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "ccid pam-u2f opensc")
+  print_task("Install Yubikey opensc")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "ccid opensc")
   run_chroot("/usr/bin/systemctl", "enable", "pcscd.service")
   print("Done")
 
@@ -1359,7 +849,7 @@ if bluetooth:
 
 if sound_apps:
   print_task("Installing Sound applications")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "mpd mpc ncmpcpp pulseaudio sof-firmware pulsemixer")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "cmus pulseaudio sof-firmware pulsemixer")
   install_audio()
   if bluetooth:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")

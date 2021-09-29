@@ -11,7 +11,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 vt = 1
 
 [default_session]
-command = "tuigreet -t --cmd /usr/bin/startsway"
+command = "tuigreet -t --cmd /usr/bin/startsway.sh"
 user = "greeter"
 EOF
   sudo systemctl enable greetd

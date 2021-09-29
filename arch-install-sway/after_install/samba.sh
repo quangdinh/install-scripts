@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -e
+
+sudo pacman -S --noconfirm cifs-utils
+
+cat <<EOF | sudo tee /usr/bin/smb
+#!/usr/bin/env bash
+
+function smb_mount() {
+  sudo mount -t cifs -o username=$(pass smb_user),password=$(pass smb_password),dir_mode=0755,file_mode=0755,uid=$(id -u),gid=$(id -g) $1 $2
+}
+
+function print_usage() {
+  echo "smb mount {remote} {local}"
+  echo "smb umount {local}"
+}
+
+if [ "$1" == "mount" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
+  smb_mount $2 $3
+  exit 0
+fi
+
+if [ "$1" == "umount" ] && [ "$2" != "" ]; then
+  sudo umount $2
+  exit 0
+fi
+
+print_usage
+EOF
+
+sudo chmod +x /usr/bin/smb
