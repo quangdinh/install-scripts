@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-read -p "Do you want to install yadm? " -n 1 -r
+read -p "Do you want to install Gitui? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S --noconfirm yadm
+  sudo pacman -S --noconfirm gitui
 fi
 
 read -p "Do you want to install Postman? " -n 1 -r

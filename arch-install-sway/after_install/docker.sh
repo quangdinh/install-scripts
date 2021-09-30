@@ -2,9 +2,9 @@
 
 set -e
 
-read -p "Do you want to install Docker & Docker Compose? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+
+
 
   echo "Installing gnupg & pass"
   sudo pacman -S --noconfirm gnupg pass
@@ -30,4 +30,5 @@ EOT
   fi
   sudo pacman -S --noconfirm docker docker-compose
   sudo usermod -aG docker $(whoami)
-fi
+
+

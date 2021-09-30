@@ -893,7 +893,7 @@ if xwm:
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox imv xdg-desktop-portal-wlr xreader xorg-xlsclients")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox imv xdg-desktop-portal-wlr xorg-xlsclients zathura zathura-pdf-mupdf")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")

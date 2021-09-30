@@ -2,9 +2,8 @@
 
 set -e
 
-read -p "Do you want to install OneDrive? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+
   yay -S --noconfirm onedriver
   # create the mountpoint and determine the service name
     export MOUNTPOINT=~/OneDrive
@@ -17,4 +16,4 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     # automatically mount onedrive when you login
     systemctl --user enable $SERVICE_NAME
-fi
+

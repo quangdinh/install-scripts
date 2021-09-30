@@ -2,9 +2,7 @@
 
 set -e
 
-read -p "Do you want to setup greetd with tuigreet " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+
   yay -S --noconfirm greetd greetd-tuigreet
   cat <<EOF | sudo tee /etc/greetd/config.toml
 [terminal]
@@ -15,4 +13,5 @@ command = "tuigreet -t --cmd /usr/bin/startsway.sh"
 user = "greeter"
 EOF
   sudo systemctl enable greetd
-fi
+
+
