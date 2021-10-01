@@ -548,7 +548,7 @@ if q.lower() == "no" or q.lower() == "n":
   yubi_key = False
 
 sound_apps = True
-q = request_input("Do you want to install Sound System and mpd? [Yes]/No ")
+q = request_input("Do you want to install Sound System? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   sound_apps = False
 
@@ -602,7 +602,7 @@ print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
 # print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
-print("{:>35}{:<1} {:<50}".format("Sound System & mpd", ":", string_bool(sound_apps)))
+print("{:>35}{:<1} {:<50}".format("Sound System", ":", string_bool(sound_apps)))
 print("{:>35}{:<1} {:<50}".format("SwayVM", ":", string_bool(xwm)))
 if xwm:
   print("{:>35}{:<1} {:<50}".format("X utilities", ":", string_bool(x_utils)))
@@ -890,7 +890,7 @@ if xwm:
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox imv xdg-desktop-portal-wlr zathura zathura-pdf-mupdf")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "imv xdg-desktop-portal-wlr zathura zathura-pdf-poppler")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
