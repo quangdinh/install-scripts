@@ -2,4 +2,4 @@
 
 set -e
 
-sudo pacman -S --noconfirm python-httplib2 calcurse
+sudo pacman -S --noconfirm python-pyparsing python-oauth2client python-httplib2 calcurse

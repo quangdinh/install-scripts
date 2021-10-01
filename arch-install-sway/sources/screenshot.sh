@@ -103,9 +103,9 @@ function take_screenshot() {
 
 
   if [ "$geo" == "" ]; then
-    $cmd "$filename"
+    $cmd - | swappy -o "$filename" -f -
   else
-    $cmd "$geo" "$filename"
+    $cmd "$geo" - | swappy -o "$filename" -f -
   fi
 
   if [ $copy_to_clipboard == 1 ]; then

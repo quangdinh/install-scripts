@@ -831,7 +831,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch bpytop gnome-keyring brightnessctl ranger atool unrar unzip zip")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch btop gnome-keyring brightnessctl ranger")
 add_gnome_keyring()
 print("Done")
 
@@ -856,9 +856,6 @@ if sound_apps:
   print("Done")
 
 if xwm:
-  print_task("Installing X.Org Server")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "xorg-server xorg-xinit xorg-xwayland gnome-themes-extra qt5-wayland qt5ct")
-  print("Done")
   if vga == "intel":
     print_task("Installing Intel video drivers")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "mesa")
@@ -877,7 +874,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp gammastep kitty python-pillow imagemagick")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick")
   install_brightness()
   install_swaylock()
   install_screenshot()
@@ -893,7 +890,7 @@ if xwm:
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox imv xdg-desktop-portal-wlr xorg-xlsclients zathura zathura-pdf-mupdf")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox imv xdg-desktop-portal-wlr zathura zathura-pdf-mupdf")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
