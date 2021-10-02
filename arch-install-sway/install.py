@@ -874,7 +874,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra ttf-liberation ttf-dejavu ttf-droid ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra ttf-dejavu ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick qt5ct qt5-wayland")
   install_brightness()
   install_swaylock()
   install_screenshot()
