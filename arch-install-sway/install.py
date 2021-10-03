@@ -713,6 +713,7 @@ run_command("/usr/bin/pacstrap", "/mnt", "base")
 print("Done")
 
 print_task("Updating pacman")
+run_chroot("/usr/bin/sed", "-i -e", '"s/#ParallelDownloads/ParallelDownloads/g"', "/etc/pacman.conf")
 run_chroot("/usr/bin/pacman", "-Syu")
 print("Done")
 
@@ -874,7 +875,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra ttf-dejavu ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick qt5ct qt5-wayland")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra ttf-dejavu ttf-liberation ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick qt5ct qt5-wayland")
   install_brightness()
   install_swaylock()
   install_screenshot()
