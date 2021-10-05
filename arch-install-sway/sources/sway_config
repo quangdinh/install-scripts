@@ -12,7 +12,8 @@
   set $term kitty 
 
   # Launcher
-  set $menu wofi -i --hide-scroll --show drun --prompt "Search" --allow-images --style /etc/wofi/styles.css --width 600 --height 400 | xargs swaymsg exec --
+  set $menu wofi -i -b -S drun -p "Application" -I -s /etc/wofi/styles.css -W 600 -H 400 | xargs swaymsg exec --
+
 ### Include configs
   include /etc/sway/config.d/*.conf
 
@@ -42,7 +43,7 @@
 
   # Start your launcher
   bindsym $mod+d exec $menu
-
+  bindsym $mod+Tab exec /usr/bin/wofiwindowswitcher.py
   # Drag floating windows by holding down $mod and left mouse button.
   # Resize them with right mouse button + $mod.
   # Despite the name, also works for non-floating windows.

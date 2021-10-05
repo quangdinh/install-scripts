@@ -421,6 +421,13 @@ def install_swayoutput():
   run_command("cp", "./sources/swayoutput.py", directory+"/swayoutput.py")
   run_command("chmod", "+x", directory+"/swayoutput.py")
 
+def install_windowswitcher():
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/wofiwindowswitcher.py", directory+"/wofiwindowswitcher.py")
+  run_command("chmod", "+x", directory+"/wofiwindowswitcher.py")
+
 def install_powermenu():
   directory = "/mnt/usr/bin"
   if not os.path.exists(directory):
@@ -875,7 +882,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra ttf-dejavu ttf-liberation ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick qt5ct qt5-wayland")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra ttf-dejavu ttf-liberation ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick qt5ct qt5-wayland python-gobject")
   install_brightness()
   install_swaylock()
   install_screenshot()
@@ -884,6 +891,7 @@ if xwm:
   install_gsettings()
   install_gammastep()
   install_powermenu()
+  install_windowswitcher()
   install_startsway()
   install_swayoutput()
   install_gnomekeyring_profile()
