@@ -20,6 +20,29 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+
+def add_gnome_keyring():
+  file = "/mnt/etc/pam.d/login"
+  with open(file, "r") as f:
+    lines = f.readlines()
+    newLines = []
+    for line in lines:
+      line = line.strip()
+      if "pam_gnome_keyring.so" in line:
+        return
+      if line.startswith("account"):
+        newLines.append("auth       optional     pam_gnome_keyring.so")
+      if line.startswith("password"):
+        newLines.append("session    optional     pam_gnome_keyring.so auto_start")
+      newLines.append(line)
+  with open(file, "w") as f:
+    out = "\n".join(newLines)
+    f.write(out)
+  file = "/mnt/etc/pam.d/passwd"
+  with open(file, "a") as f:
+    f.write("password	optional	pam_gnome_keyring.so\n")
+
+
 def request_input(prompt):
   r = input(prompt)
   return r.strip()
@@ -157,9 +180,9 @@ def ask_timezone():
     return ask_timezone()
 
 def ask_locale():
-  l = request_input("Enter locales [en_US, en_GB]: ")
+  l = request_input("Enter locales [en_US]: ")
   if l == "":
-    l = "en_US, en_GB"
+    l = "en_US"
   lc = l.split(",")
   locales = []
   for locale in lc:
@@ -304,6 +327,7 @@ def parse_hooks_encrypt_lvm(encrypt, plymouth):
         if not plymouth:
           results.append("encrypt")
         results.append("lvm2")
+      results.append("resume")
       results.append(hook)
       continue
 
@@ -323,6 +347,18 @@ def get_crypt_uuid(disk):
   partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="cryptlvm"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
   if partition == "":
     print("Error! Cryptlvm not found")
+    sys.exit(0)
+  uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
+  return uuid
+
+def get_swap_uuid(encrypt):
+  if encrypt:
+    partition = "/dev/mapper/VolGroup0-lvSwap"
+  else:
+    partition = os.popen('blkid ' + disk +'* | grep -oP \'/dev/[a-z0-9]*:.*PARTLABEL="swap"\' | grep -o \'/dev/[a-z0-9]*\'').readline().strip()
+  
+  if partition == "":
+    print("Error! swap not found")
     sys.exit(0)
   uuid = os.popen('lsblk -no uuid ' + partition + " | tail -n 1").readline().strip()
   return uuid
@@ -353,33 +389,111 @@ def format_root(partition, fs):
   else:
     run_command("/usr/bin/mkfs.ext4", partition)
 
-def hide_system_apps():
-  shell_script = """
-#!/usr/bin/env bash
+def install_brightness():
+  directory = "/mnt/etc/sway/config.d"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/brightness.conf", directory+"/brightness.conf")
 
-sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo )
-dir="/mnt/usr/share/applications"
-for app in ${sys_apps[@]}; do
-  file_name="$dir/$app.desktop"
-  echo -ne "Checking $app: "
-  if [ -f $file_name ]; then
-    var_hidden=$(cat $file_name | egrep -ohm1 "Hidden=(true|false)")
-    if [ -z $var_hidden ]; then
-      echo 'Hidden=true' >> $file_name
-      echo -ne "Set Hidden=true\\n"
-    else
-      sed -i -e 's/Hidden=.*/Hidden=true/g' $file_name
-      echo -ne "Update Hidden=true\\n"
-    fi
-  else
-    echo -ne "Skipping\\n"
-  fi
-done
-  """
-  with open("/tmp/hide_sys", "a") as f:
-    f.write(shell_script)
-  run_command("sh", "/tmp/hide_sys")
-  os.remove("/tmp/hide_sys")
+def install_screenshot():
+  directory = "/mnt/etc/sway/config.d"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/screenshot.conf", directory+"/screenshot.conf")
+
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/screenshot.sh", directory+"/screenshot.sh")
+  run_command("chmod", "+x", directory+"/screenshot.sh")
+
+def install_audio():
+  directory = "/mnt/etc/sway/config.d"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/audio.conf", directory+"/audio.conf")
+
+
+def install_swayoutput():
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/swayoutput.py", directory+"/swayoutput.py")
+  run_command("chmod", "+x", directory+"/swayoutput.py")
+
+def install_windowswitcher():
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/wofiwindowswitcher.py", directory+"/wofiwindowswitcher.py")
+  run_command("chmod", "+x", directory+"/wofiwindowswitcher.py")
+
+def install_powermenu():
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/wofipowermenu.py", directory+"/wofipowermenu.py")
+  run_command("chmod", "+x", directory+"/wofipowermenu.py")
+
+def install_gammastep():
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/gammastep.sh", directory+"/gammastep.sh")
+  run_command("chmod", "+x", directory+"/gammastep.sh")
+
+def install_gnomekeyring_profile():
+  directory = "/mnt/etc/profile.d"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/gnome-keyring-daemon.sh", directory+"/gnome-keyring-daemon.sh")
+
+def install_gsettings():
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/swaygsettings.sh", directory+"/swaygsettings.sh")
+  run_command("chmod", "+x", directory+"/swaygsettings.sh")
+
+def install_startsway():
+  script="""
+"""
+  directory = "/mnt/usr/bin"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/startsway.sh", directory+"/startsway.sh")
+  run_command("chmod", "+x", directory+"/startsway.sh")
+
+def install_sway_config():
+  directory = "/mnt/etc/sway"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/sway_config", directory+"/config")
+
+
+def install_wofi_styles():
+  script = """
+"""
+  directory = "/mnt/etc/wofi"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/waybar_styles.css", directory+"/styles.css")
+
+def install_swaylock():
+  directory = "/mnt/etc/sway/config.d"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/swayidle.conf", directory+"/swayidle.conf")
+  
+
+  directory = "/mnt/etc/sway"
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  run_command("cp", "./sources/swaylock.conf", directory+"/swaylock.conf")
+
+
+def hide_system_apps():
+  run_command("sh", "./sources/hide_system_apps.sh")
 
 cpu = detect_cpu()
 vga = detect_vga().lower()
@@ -415,9 +529,10 @@ clear()
 locales = ask_locale()
 lang = locales[0] + ".UTF-8"
 bluetooth = detect_bluetooth()
+use_zsh = True
 
-clear()
-use_zsh = ask_zsh()
+# clear()
+# use_zsh = ask_zsh()
 
 clear()
 print("Setup your user account, this account will have sudo access")
@@ -425,11 +540,13 @@ user_name = ask_username()
 user_label = request_input("User Fullname: ")
 user_password = ask_password()
 
-clear()
-plymouth = True
-q = request_input("Do you want to use Plymouth? [Yes]/No ")
-if q.lower() == "no" or q.lower() == "n":
-  plymouth = False
+plymouth = False
+
+# clear()
+# plymouth = True
+# q = request_input("Do you want to use Plymouth? [Yes]/No ")
+# if q.lower() == "no" or q.lower() == "n":
+#   plymouth = False
 
 clear()
 yubi_key = True
@@ -437,29 +554,28 @@ q = request_input("Do you want to use Yubikey? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   yubi_key = False
 
-
-gnome = True
-q = request_input("Do you want to install Gnome? [Yes]/No ")
+sound_apps = True
+q = request_input("Do you want to install Sound System? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
-  gnome = False
+  sound_apps = False
 
-pipewire = gnome
-if gnome:
-  q = request_input("Do you want to install Pipewire? [Yes]/No ")
-  if q.lower() == "no" or q.lower() == "n":
-    pipewire = False
+xwm = True
+q = request_input("Do you want to install SwayVM? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  xwm = False
 
-gnome_utils = gnome
-if gnome:
-  q = request_input("Do you want to install Gnome utilities? [Yes]/No ")
-  if q.lower() == "no" or q.lower() == "n":
-    gnome_utils = False
 
-gnome_multimedia = gnome
-if gnome:
-  q = request_input("Do you want to install Gnome multimedia applications? [Yes]/No ")
+x_utils = xwm
+if xwm:
+  q = request_input("Do you want to install X utilities? [Yes]/No ")
   if q.lower() == "no" or q.lower() == "n":
-    gnome_multimedia = False
+    x_utils = False
+
+x_multimedia = xwm and sound_apps
+if xwm and sound_apps:
+  q = request_input("Do you want to install X multimedia applications? [Yes]/No ")
+  if q.lower() == "no" or q.lower() == "n":
+    x_multimedia = False
 
 git_base = True
 q = request_input("Do you want to install development packages? [Yes]/No ")
@@ -490,14 +606,14 @@ print("{:>35}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_l
 print("{:>35}{:<1} {:<50}".format("Timezone", ":", timezone))
 print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
 print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
-print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
+# print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
-print("{:>35}{:<1} {:<50}".format("Gnome", ":", string_bool(gnome)))
-if gnome:
-  print("{:>35}{:<1} {:<50}".format("Pipewire", ":", string_bool(pipewire)))
-  print("{:>35}{:<1} {:<50}".format("Gnome utilities", ":", string_bool(gnome_utils)))
-  print("{:>35}{:<1} {:<50}".format("Gnome multimedia applications", ":", string_bool(gnome_multimedia)))
+print("{:>35}{:<1} {:<50}".format("Sound System", ":", string_bool(sound_apps)))
+print("{:>35}{:<1} {:<50}".format("SwayVM", ":", string_bool(xwm)))
+if xwm:
+  print("{:>35}{:<1} {:<50}".format("X utilities", ":", string_bool(x_utils)))
+  print("{:>35}{:<1} {:<50}".format("X multimedia applications", ":", string_bool(x_multimedia)))
 
 print("{:>35}{:<1} {:<50}".format("Development packages", ":", string_bool(git_base)))
 print()
@@ -604,6 +720,7 @@ run_command("/usr/bin/pacstrap", "/mnt", "base")
 print("Done")
 
 print_task("Updating pacman")
+run_chroot("/usr/bin/sed", "-i -e", '"s/#ParallelDownloads/ParallelDownloads/g"', "/etc/pacman.conf")
 run_chroot("/usr/bin/pacman", "-Syu")
 print("Done")
 
@@ -645,17 +762,6 @@ if use_zsh:
   run_chroot("/usr/bin/chsh", "-s", "/usr/bin/zsh")
   run_chroot("/usr/bin/sed", "-i -e", '"s/SHELL=.*/\SHELL=\/usr\/bin\/zsh/g"', "/etc/default/useradd")
   print("Done")
-
-print_task("Installing Sudo")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
-run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
-print("Done")
-
-print_task("Setup user account")
-run_chroot("/usr/bin/useradd", "-G wheel,input,lp -m -c \"" + user_label  + "\"", user_name)
-run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
-run_chroot("passwd -l root")
-print("Done")
 
 print_task("Installing kernel")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "linux-lts linux-firmware")
@@ -705,13 +811,17 @@ if disk != "None":
     cmdLineExtra = ' i915.fastboot=1'
 
   cpucode = get_cpu_code(cpu)
-  cmdLine = 'root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
+  cmdLine = 'root=UUID=' + rootuuid + ' ' + cpucode + 'initrd=/initramfs-linux-lts.img'
 
   if encrypt:
     cryptuuid = get_crypt_uuid(disk)
     cmdLine = 'cryptdevice=UUID=' + cryptuuid + ':cryptlvm root=UUID=' + rootuuid + ' rw ' + cpucode + 'initrd=/initramfs-linux-lts.img'
   
-  cmdLine = '"' + cmdLine + ' quiet loglevel=3 splash rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt,iTCO_vendor_support fbcon=nodefer'+ cmdLineExtra + '"'
+  swap_uuid = get_swap_uuid(encrypt)
+  if swap_uuid != "":
+    cmdLine = cmdLine + " resume=UUID=" + swap_uuid
+
+  cmdLine = '"' + 'quiet loglevel=3 splash ' + cmdLine  + ' rw rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt,iTCO_vendor_support nmi_watchdog=0'+ cmdLineExtra + '"'
 
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
@@ -728,13 +838,14 @@ run_chroot("/usr/bin/pacman", "-S --noconfirm", "networkmanager")
 run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
-print_task("Installing Vim")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim")
+print_task("Installing System utilities")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch btop ranger")
+add_gnome_keyring()
 print("Done")
 
 if yubi_key:
-  print_task("Install Yubikey opensc & pam-u2f")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "ccid pam-u2f opensc")
+  print_task("Install Yubikey opensc")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "ccid opensc")
   run_chroot("/usr/bin/systemctl", "enable", "pcscd.service")
   print("Done")
 
@@ -744,7 +855,15 @@ if bluetooth:
   run_chroot("/usr/bin/systemctl", "enable", "bluetooth")
   print("Done")
 
-if gnome:
+if sound_apps:
+  print_task("Installing Sound applications")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio sof-firmware pulsemixer")
+  install_audio()
+  if bluetooth:
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
+  print("Done")
+
+if xwm:
   if vga == "intel":
     print_task("Installing Intel video drivers")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "mesa")
@@ -761,53 +880,62 @@ if gnome:
     print_task("Installing Generic video drivers")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "xf86-video-fbdev xf86-video-vesa")
     print("Done")
+  
   print_task("Installing Gnome")
-
-  if plymouth:
-    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/gdm-plymouth.pkg.tar.zst", "-o", "/gdm-plymouth.pkg.tar.zst")
-    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/libgdm-plymouth.pkg.tar.zst", "-o", "/libgdm-plymouth.pkg.tar.zst")
-    run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
-    run_chroot("rm", "-rf", "/*.pkg.tar.zst")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware")
-  else:
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware")
-
-  run_chroot("/usr/bin/systemctl", "enable", "gdm")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus")
+  install_brightness()
+  install_swaylock()
+  install_screenshot()
+  install_wofi_styles()
+  install_sway_config()
+  install_gsettings()
+  install_gammastep()
+  install_powermenu()
+  install_windowswitcher()
+  install_startsway()
+  install_swayoutput()
+  install_gnomekeyring_profile()
   print("Done")
 
-  if pipewire:
-    print_task("Installing Pipewire")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire xdg-desktop-portal-gtk xdg-desktop-portal")
+  if x_utils:
+    print_task("Installing X utilities")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox pipewire xdg-desktop-portal-gtk xdg-desktop-portal eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks ttf-droid gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
-
-  if gnome_utils:
-    print_task("Installing Gnome utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks ttf-droid gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
-    print("Done")
-  if gnome_multimedia:
-    print_task("Installing Gnome multimedia applications")
+  if x_multimedia:
+    print_task("Installing X multimedia applications")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "xvidcore x264 ffmpeg gst-libav totem rhythmbox")
     print("Done")
-  hide_system_apps()
-
+  
 if git_base:
   print_task("Installing development packages")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs npm")
   print("Done")
 
+hide_system_apps()
 
 if yay:
   print_task("Installing yay")
-  if not git_base:
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go")
-
-  run_chrootuser(user_name, "git", "clone", "https://aur.archlinux.org/yay.git", "~/yay")
-  run_chrootuser(user_name, "cd ~/yay", "&&", "makepkg -s --noconfirm")
-  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/home/" + user_name + "/yay/yay*.pkg.tar.zst")
-  run_chrootuser(user_name, "rm -rf ~/yay")
-  run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
-  run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
+  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/yay.pkg.tar.zst", "-o", "/yay.pkg.tar.zst")
+  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
+  run_chroot("rm", "-rf", "/*.pkg.tar.zst")
   print("Done")
+
+print_task("Installing Sudo")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
+run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
+run_chroot("echo \"%wheel ALL=(ALL) NOPASSWD: /usr/bin/mount, /usr/bin/umount\" >> /etc/sudoers")
+print("Done")
+
+print_task("Setup user account")
+run_chroot("/usr/bin/useradd", "-G wheel,input,lp,video -m -c \"" + user_label  + "\"", user_name)
+run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
+run_chroot("passwd -l root")
+print("Done")
+
+print_task("Copying after_install scripts")
+run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
+run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
+print("Done")
 
 if disk != "None":
   if int(swap) > 0:
