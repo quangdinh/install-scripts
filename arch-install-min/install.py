@@ -426,10 +426,10 @@ user_label = request_input("User Fullname: ")
 user_password = ask_password()
 
 clear()
-plymouth = True
-q = request_input("Do you want to use Plymouth? [Yes]/No ")
-if q.lower() == "no" or q.lower() == "n":
-  plymouth = False
+plymouth = False
+# q = request_input("Do you want to use Plymouth? [Yes]/No ")
+# if q.lower() == "no" or q.lower() == "n":
+#   plymouth = False
 
 clear()
 yubi_key = True
@@ -770,7 +770,7 @@ if gnome:
     run_chroot("rm", "-rf", "/*.pkg.tar.zst")
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware")
   else:
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra")
 
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
@@ -782,7 +782,7 @@ if gnome:
 
   if gnome_utils:
     print_task("Installing Gnome utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks ttf-droid gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-terminal gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks ttf-droid ttf-roboto gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
