@@ -267,7 +267,7 @@ def ask_hide_grub():
     return True
   return False
 
-def parse_hooks_encrypt_lvm(encrypt, plymouth):
+def parse_hooks_encrypt_lvm(encrypt):
   current_hooks = os.popen("cat /mnt/etc/mkinitcpio.conf | grep -oP '^HOOKS=(\(.*\))$'").readline().strip()
   objects = re.search('\((.*)\)', current_hooks)
   hooks = []
@@ -279,30 +279,16 @@ def parse_hooks_encrypt_lvm(encrypt, plymouth):
     keyboardHook = "udev"
 
   for hook in hooks:
-    if hook == "udev" and hook != keyboardHook:
-      if plymouth:
-        results.append("udev")
-        results.append("plymouth")
-        if encrypt:
-          results.append("plymouth-encrypt")
-        continue
-
     if hook == keyboardHook:
       results.append(hook)
       results.append("keyboard")
-      if plymouth and hook == "udev":
-        results.append("plymouth")
-        if encrypt:
-          results.append("plymouth-encrypt")
-      continue
 
-    if hook == "keyboard" or hook == "encrypt" or hook == "plymouth" or hook == "plymouth-encrypt" or hook == "lvm2":
+    if hook == "keyboard" or hook == "encrypt" or hook == "lvm2":
       continue
 
     if hook == "filesystems":
       if encrypt:
-        if not plymouth:
-          results.append("encrypt")
+        results.append("encrypt")
         results.append("lvm2")
       results.append(hook)
       continue
@@ -426,12 +412,6 @@ user_label = request_input("User Fullname: ")
 user_password = ask_password()
 
 clear()
-plymouth = False
-# q = request_input("Do you want to use Plymouth? [Yes]/No ")
-# if q.lower() == "no" or q.lower() == "n":
-#   plymouth = False
-
-clear()
 yubi_key = True
 q = request_input("Do you want to use Yubikey? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
@@ -490,7 +470,6 @@ print("{:>35}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_l
 print("{:>35}{:<1} {:<50}".format("Timezone", ":", timezone))
 print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
 print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
-print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
 print("{:>35}{:<1} {:<50}".format("Gnome", ":", string_bool(gnome)))
@@ -671,21 +650,12 @@ if cpu == "Intel":
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "intel-ucode")
   print("Done")
 
-if plymouth:
-  print_task("Installing Plymouth")
-  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-git.pkg.tar.zst", "-o", "/plymouth-git.pkg.tar.zst")
-  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-theme-arch-glow.pkg.tar.zst", "-o", "/plymouth-theme-arch-glow.pkg.tar.zst")
-  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
-  run_chroot("rm", "-rf", "/*.pkg.tar.zst")
-  run_chroot("/usr/bin/plymouth-set-default-theme", "-R", "arch-glow")
-  print("Done")
-
 if disk != "None" and encrypt:
   print_task("Install LVM2 and configure encryption")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "lvm2")
   print("Done")
 
-hooks = parse_hooks_encrypt_lvm(encrypt, plymouth)
+hooks = parse_hooks_encrypt_lvm(encrypt)
 
 if vga == "intel":
   run_chroot("/usr/bin/sed", "-i -e", "\"s/MODULES=(.*)/MODULES=(i915)/g\"", "/etc/mkinitcpio.conf")
@@ -693,7 +663,7 @@ if vga == "intel":
 if vga == "amd":
   run_chroot("/usr/bin/sed", "-i -e", "\"s/MODULES=(.*)/MODULES=(amdgpu)/g\"", "/etc/mkinitcpio.conf")
 
-if encrypt or plymouth:
+if encrypt:
   run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
 
 run_chroot("/usr/bin/mkinitcpio", "-P")
@@ -763,26 +733,20 @@ if gnome:
     print("Done")
   print_task("Installing Gnome")
 
-  if plymouth:
-    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/gdm-plymouth.pkg.tar.zst", "-o", "/gdm-plymouth.pkg.tar.zst")
-    run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/libgdm-plymouth.pkg.tar.zst", "-o", "/libgdm-plymouth.pkg.tar.zst")
-    run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
-    run_chroot("rm", "-rf", "/*.pkg.tar.zst")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware")
-  else:
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra")
+
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gdm xdg-user-dirs-gtk gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra")
 
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
 
   if pipewire:
     print_task("Installing Pipewire")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire xdg-desktop-portal-gtk xdg-desktop-portal")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire xdg-desktop-portal-gnome xdg-desktop-portal")
     print("Done")
 
   if gnome_utils:
     print_task("Installing Gnome utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gedit gnome-terminal gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks ttf-droid ttf-roboto gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gnome-terminal gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks ttf-droid ttf-roboto gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
