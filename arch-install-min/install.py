@@ -756,7 +756,7 @@ if gnome:
 
 if git_base:
   print_task("Installing development packages")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs npm")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs-lts-gallium npm")
   print("Done")
 
 
