@@ -746,7 +746,7 @@ if gnome:
 
   if gnome_utils:
     print_task("Installing Gnome utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog evince file-roller gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks noto-fonts noto-fonts-emoji gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox geary eog gnome-calendar evince file-roller gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks noto-fonts noto-fonts-emoji gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
