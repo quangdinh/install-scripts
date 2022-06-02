@@ -21,14 +21,14 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   sudo pacman -S --noconfirm telegram-desktop
 fi
 
-read -p "Do you want to install Typora? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S typora
-fi
-
 read -p "Do you want to install Gnome Text Editor? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   yay -S gnome-text-editor
+fi
+
+read -p "Do you want to install Simplenote? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  yay -S simplenote-electron-bin
 fi

@@ -741,7 +741,7 @@ if gnome:
 
   if pipewire:
     print_task("Installing Pipewire")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire xdg-desktop-portal-gnome xdg-desktop-portal")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire pipewire-media-session xdg-desktop-portal-gnome xdg-desktop-portal")
     print("Done")
 
   if gnome_utils:
