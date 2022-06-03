@@ -18,7 +18,7 @@ fi
 read -p "Do you want to install Telegram Desktop? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  sudo pacman -S --noconfirm telegram-desktop
+  yay -S telegram-desktop-bin
 fi
 
 read -p "Do you want to install Gnome Text Editor? " -n 1 -r
