@@ -6,7 +6,6 @@ import os
 import json
 import signal
 import sys
-import subprocess
 import re
 import time
 
@@ -698,8 +697,8 @@ run_chroot("/usr/bin/pacman", "-S --noconfirm", "networkmanager")
 run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
-print_task("Installing Vim")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim")
+print_task("Installing NeoVim")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim")
 print("Done")
 
 if yubi_key:

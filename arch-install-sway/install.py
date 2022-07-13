@@ -839,7 +839,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "vim neofetch btop gnome-keyring brightnessctl ranger")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim neofetch btop gnome-keyring brightnessctl ranger")
 add_gnome_keyring()
 print("Done")
 
