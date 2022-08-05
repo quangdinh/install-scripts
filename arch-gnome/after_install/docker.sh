@@ -28,6 +28,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 }
 EOT
   fi
-  sudo pacman -S --noconfirm docker docker-compose
+  sudo pacman -S --noconfirm ctop docker docker-compose
   sudo usermod -aG docker $(whoami)
 fi

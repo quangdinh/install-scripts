@@ -619,7 +619,7 @@ print("Done")
 
 if use_zsh:
   print_task("Setup zsh")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "zsh")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "zsh fzf zoxide")
   run_chroot("/usr/bin/chsh", "-s", "/usr/bin/zsh")
   run_chroot("/usr/bin/sed", "-i -e", '"s/SHELL=.*/\SHELL=\/usr\/bin\/zsh/g"', "/etc/default/useradd")
   print("Done")
@@ -697,8 +697,8 @@ run_chroot("/usr/bin/pacman", "-S --noconfirm", "networkmanager")
 run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
-print_task("Installing NeoVim")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim")
+print_task("Installing System Utilities")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim ytop bat procs")
 print("Done")
 
 if yubi_key:
@@ -755,7 +755,7 @@ if gnome:
 
 if git_base:
   print_task("Installing development packages")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs-lts-gallium npm yarn")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git git-delta gitui rustup base-devel go nodejs-lts-gallium npm yarn")
   print("Done")
 
 
