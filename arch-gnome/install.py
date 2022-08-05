@@ -698,7 +698,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System Utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim bottom bat procs")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim bottom bat procs exa")
 print("Done")
 
 if yubi_key:
