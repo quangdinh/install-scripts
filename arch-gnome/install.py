@@ -733,7 +733,7 @@ if gnome:
   print_task("Installing Gnome")
 
 
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk kitty gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk kitty gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard")
 
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
@@ -755,7 +755,7 @@ if gnome:
 
 if git_base:
   print_task("Installing development packages")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs-lts-gallium npm")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs-lts-gallium npm yarn")
   print("Done")
 
 

@@ -24,9 +24,3 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   yay -S android-studio
 fi
-
-read -p "Do you want to install Rust? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-fi

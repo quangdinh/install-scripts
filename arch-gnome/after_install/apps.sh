@@ -2,6 +2,12 @@
 
 set -e
 
+read -p "Do you want to install Brace? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  yay -S brave-bin
+fi
+
 read -p "Do you want to install NordVPN? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -19,16 +25,4 @@ read -p "Do you want to install Telegram Desktop? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   yay -S telegram-desktop-bin
-fi
-
-read -p "Do you want to install Gnome Text Editor? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S gnome-text-editor
-fi
-
-read -p "Do you want to install Simplenote? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S simplenote-electron-bin
 fi

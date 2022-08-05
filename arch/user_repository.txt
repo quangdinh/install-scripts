@@ -1,7 +1,0 @@
-base-devel git
-
-git clone https://aur.archlinux.org/...
-
-cd ...
-
-makepkg -si

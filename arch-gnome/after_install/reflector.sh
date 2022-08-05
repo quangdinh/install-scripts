@@ -9,7 +9,7 @@ cat <<EOF | sudo tee /etc/xdg/reflector/reflector.conf
 # Consult the list of available countries with "reflector --list-countries" and
 # select the countries nearest to you or the ones that you trust. For example:
 # --country France,Germany
-
+--country SG,TW,AU,HK
 --save /etc/pacman.d/mirrorlist
 --protocol https
 --latest 10
@@ -18,4 +18,4 @@ cat <<EOF | sudo tee /etc/xdg/reflector/reflector.conf
 EOF
 
 sudo systemctl enable reflector.timer
-echo "Edit /etc/xdg/reflector/reflector.conf and run sudo systemctl start reflector"
+sudo systemctl start reflector

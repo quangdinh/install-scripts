@@ -1,5 +1,0 @@
-bluez bluez-utils gnome-bluetooth
-
-systemctl enable bluetooth
-
-usermod -aG lp <user>
