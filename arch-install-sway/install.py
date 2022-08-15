@@ -290,7 +290,7 @@ def ask_hide_grub():
     return True
   return False
 
-def parse_hooks_encrypt_lvm(encrypt, plymouth):
+def parse_hooks_encrypt_lvm(encrypt):
   current_hooks = os.popen("cat /mnt/etc/mkinitcpio.conf | grep -oP '^HOOKS=(\(.*\))$'").readline().strip()
   objects = re.search('\((.*)\)', current_hooks)
   hooks = []
@@ -302,32 +302,17 @@ def parse_hooks_encrypt_lvm(encrypt, plymouth):
     keyboardHook = "udev"
 
   for hook in hooks:
-    if hook == "udev" and hook != keyboardHook:
-      if plymouth:
-        results.append("udev")
-        results.append("plymouth")
-        if encrypt:
-          results.append("plymouth-encrypt")
-        continue
-
     if hook == keyboardHook:
       results.append(hook)
       results.append("keyboard")
-      if plymouth and hook == "udev":
-        results.append("plymouth")
-        if encrypt:
-          results.append("plymouth-encrypt")
-      continue
 
-    if hook == "keyboard" or hook == "encrypt" or hook == "plymouth" or hook == "plymouth-encrypt" or hook == "lvm2":
+    if hook == "keyboard" or hook == "encrypt" or hook == "lvm2":
       continue
 
     if hook == "filesystems":
       if encrypt:
-        if not plymouth:
-          results.append("encrypt")
+        results.append("encrypt")
         results.append("lvm2")
-      results.append("resume")
       results.append(hook)
       continue
 
@@ -540,14 +525,6 @@ user_name = ask_username()
 user_label = request_input("User Fullname: ")
 user_password = ask_password()
 
-plymouth = False
-
-# clear()
-# plymouth = True
-# q = request_input("Do you want to use Plymouth? [Yes]/No ")
-# if q.lower() == "no" or q.lower() == "n":
-#   plymouth = False
-
 clear()
 yubi_key = True
 q = request_input("Do you want to use Yubikey? [Yes]/No ")
@@ -606,7 +583,6 @@ print("{:>35}{:<1} {:<50}".format("User Account", ":", user_name + " (" + user_l
 print("{:>35}{:<1} {:<50}".format("Timezone", ":", timezone))
 print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
 print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
-# print("{:>35}{:<1} {:<50}".format("Plymouth", ":", string_bool(plymouth)))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
 print("{:>35}{:<1} {:<50}".format("Sound System", ":", string_bool(sound_apps)))
@@ -777,21 +753,12 @@ if cpu == "Intel":
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "intel-ucode")
   print("Done")
 
-if plymouth:
-  print_task("Installing Plymouth")
-  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-git.pkg.tar.zst", "-o", "/plymouth-git.pkg.tar.zst")
-  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/plymouth-theme-arch-glow.pkg.tar.zst", "-o", "/plymouth-theme-arch-glow.pkg.tar.zst")
-  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
-  run_chroot("rm", "-rf", "/*.pkg.tar.zst")
-  run_chroot("/usr/bin/plymouth-set-default-theme", "-R", "arch-glow")
-  print("Done")
-
 if disk != "None" and encrypt:
   print_task("Install LVM2 and configure encryption")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "lvm2")
   print("Done")
 
-hooks = parse_hooks_encrypt_lvm(encrypt, plymouth)
+hooks = parse_hooks_encrypt_lvm(encrypt)
 
 if vga == "intel":
   run_chroot("/usr/bin/sed", "-i -e", "\"s/MODULES=(.*)/MODULES=(i915)/g\"", "/etc/mkinitcpio.conf")
@@ -799,7 +766,7 @@ if vga == "intel":
 if vga == "amd":
   run_chroot("/usr/bin/sed", "-i -e", "\"s/MODULES=(.*)/MODULES=(amdgpu)/g\"", "/etc/mkinitcpio.conf")
 
-if encrypt or plymouth:
+if encrypt:
   run_chroot("/usr/bin/sed", "-i -e", "\"s/HOOKS=(.*)/HOOKS=(" + hooks + ")/g\"", "/etc/mkinitcpio.conf")
 
 run_chroot("/usr/bin/mkinitcpio", "-P")
@@ -821,7 +788,7 @@ if disk != "None":
   if swap_uuid != "":
     cmdLine = cmdLine + " resume=UUID=" + swap_uuid
 
-  cmdLine = '"' + 'quiet loglevel=3 splash ' + cmdLine  + ' rw rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt,iTCO_vendor_support nmi_watchdog=0'+ cmdLineExtra + '"'
+  cmdLine = '"' + cmdLine + ' quiet loglevel=3 splash rd.systemd.show_status=auto rd.udev.log_priority=3 module_blacklist=iTCO_wdt,iTCO_vendor_support fbcon=nodefer'+ cmdLineExtra + '"'
 
   print_task("Installing boot manager")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "efibootmgr")
@@ -839,7 +806,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim neofetch btop gnome-keyring brightnessctl ranger")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim bottom bat procs exa gnome-keyring brightnessctl ranger")
 add_gnome_keyring()
 print("Done")
 
@@ -882,7 +849,7 @@ if xwm:
     print("Done")
   
   print_task("Installing SwayVM")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra ttf-dejavu ttf-liberation ttf-font-awesome wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick qt5ct qt5-wayland python-gobject")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "sway waybar swaylock swayidle xorg-xwayland gnome-themes-extra noto-fonts noto-fonts-emoji wofi mako xdg-user-dirs wl-clipboard grim jq slurp swappy gammastep kitty python-pillow imagemagick qt5ct qt5-wayland python-gobject")
   install_brightness()
   install_swaylock()
   install_screenshot()
@@ -899,7 +866,7 @@ if xwm:
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox imv xdg-desktop-portal-wlr zathura zathura-pdf-poppler")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "imv xdg-desktop-portal-wlr zathura zathura-pdf-poppler")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")
@@ -908,16 +875,22 @@ if xwm:
   
 if git_base:
   print_task("Installing development packages")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go nodejs npm")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git git-delta gitui rustup base-devel go nodejs-lts-gallium npm yarn")
   print("Done")
 
 hide_system_apps()
 
 if yay:
   print_task("Installing yay")
-  run_chroot("/usr/bin/curl", "-L", "https://github.com/quangdinh/install-scripts/raw/master/pkgs/yay.pkg.tar.zst", "-o", "/yay.pkg.tar.zst")
-  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/*.pkg.tar.zst")
-  run_chroot("rm", "-rf", "/*.pkg.tar.zst")
+  if not git_base:
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "git base-devel go")
+
+  run_chrootuser(user_name, "git", "clone", "https://aur.archlinux.org/yay.git", "~/yay")
+  run_chrootuser(user_name, "cd ~/yay", "&&", "makepkg -s --noconfirm")
+  run_chroot("/usr/bin/pacman", "-U --noconfirm", "/home/" + user_name + "/yay/yay*.pkg.tar.zst")
+  run_chrootuser(user_name, "rm -rf ~/yay")
+  run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
+  run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
   print("Done")
 
 print_task("Installing Sudo")

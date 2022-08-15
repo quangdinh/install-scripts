@@ -1,28 +1,26 @@
 #!/usr/bin/env bash
 set -e
 
-read -p "Do you want to install Gitui? " -n 1 -r
+read -p "Do you want to install yadm? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  sudo pacman -S --noconfirm gitui
+  sudo pacman -S --noconfirm yadm
 fi
 
 read -p "Do you want to install Postman? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S --noconfirm postman-bin
+  yay -S postman-bin
 fi
 
 read -p "Do you want to install Visual Studio Code? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S --noconfirm visual-studio-code-bin
-  sudo sed -i -e "s/Exec=\/opt\/visual-studio-code\/code --no-sandbox/Exec=\/opt\/visual-studio-code\/code --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox/g" /usr/share/applications/visual-studio-code-url-handler.desktop
-  sudo sed -i -e "s/Exec=\/opt\/visual-studio-code\/code --no-sandbox/Exec=\/opt\/visual-studio-code\/code --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox/g" /usr/share/applications/visual-studio-code.desktop
+  yay -S visual-studio-code-bin
 fi
 
 read -p "Do you want to install Android Studio? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S --noconfirm android-studio
+  yay -S android-studio
 fi
