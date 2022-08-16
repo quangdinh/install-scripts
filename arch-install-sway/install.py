@@ -739,6 +739,17 @@ if use_zsh:
   run_chroot("/usr/bin/sed", "-i -e", '"s/SHELL=.*/\SHELL=\/usr\/bin\/zsh/g"', "/etc/default/useradd")
   print("Done")
 
+print_task("Installing Sudo")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
+run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
+print("Done")
+
+print_task("Setup user account")
+run_chroot("/usr/bin/useradd", "-G wheel,input,lp -m -c \"" + user_label  + "\"", user_name)
+run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
+run_chroot("passwd -l root")
+print("Done")
+
 print_task("Installing kernel")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "linux-lts linux-firmware")
 print("Done")
@@ -892,18 +903,6 @@ if yay:
   run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
   run_chroot("chown -R", user_name+":"+user_name, "/home/" + user_name + "/after_install")
   print("Done")
-
-print_task("Installing Sudo")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "sudo")
-run_chroot("echo \"%wheel ALL=(ALL) ALL\" >> /etc/sudoers")
-run_chroot("echo \"%wheel ALL=(ALL) NOPASSWD: /usr/bin/mount, /usr/bin/umount\" >> /etc/sudoers")
-print("Done")
-
-print_task("Setup user account")
-run_chroot("/usr/bin/useradd", "-G wheel,input,lp,video -m -c \"" + user_label  + "\"", user_name)
-run_chroot("echo \"" + user_name + ":" + user_password + "\" | chpasswd")
-run_chroot("passwd -l root")
-print("Done")
 
 print_task("Copying after_install scripts")
 run_command("cp -a", "./after_install", "/mnt/home/" + user_name)
