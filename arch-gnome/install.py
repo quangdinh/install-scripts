@@ -698,7 +698,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System Utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim bottom bat procs exa")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "yadm neovim bottom bat procs exa")
 print("Done")
 
 if yubi_key:
@@ -733,7 +733,7 @@ if gnome:
   print_task("Installing Gnome")
 
 
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk kitty gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-shell-extension-appindicator gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk kitty gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard")
 
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
