@@ -2,12 +2,6 @@
 
 set -e
 
-read -p "Do you want to install Brave? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S brave-bin
-fi
-
 read -p "Do you want to install NordVPN? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -27,8 +21,13 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   yay -S telegram-desktop-bin
 fi
 
+read -p "Do you want to install Gimp? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  sudo pacman -S --noconfirm gimp
+fi
+
 read -p "Do you want to install Obsidian? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   sudo pacman -S obsidian
-fi

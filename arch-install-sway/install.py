@@ -817,7 +817,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "neovim bottom bat procs exa gnome-keyring brightnessctl ranger")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "yadm neovim bottom bat procs exa gnome-keyring brightnessctl ranger")
 add_gnome_keyring()
 print("Done")
 
@@ -877,7 +877,7 @@ if xwm:
 
   if x_utils:
     print_task("Installing X utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "imv xdg-desktop-portal-wlr zathura zathura-pdf-poppler")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "imv xdg-desktop-portal-wlr zathura zathura-pdf-poppler firefox")
     print("Done")
   if x_multimedia:
     print_task("Installing X multimedia applications")

@@ -2,12 +2,6 @@
 
 set -e
 
-read -p "Do you want to install Brave? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S brave-bin
-fi
-
 read -p "Do you want to install NordVPN? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
