@@ -156,9 +156,9 @@ def ask_timezone():
     return ask_timezone()
 
 def ask_locale():
-  l = request_input("Enter locales [en_US, en_GB]: ")
+  l = request_input("Enter locales [en_US, nl_NL]: ")
   if l == "":
-    l = "en_US, en_GB"
+    l = "en_US, nl_NL"
   lc = l.split(",")
   locales = []
   for locale in lc:
@@ -733,19 +733,19 @@ if gnome:
   print_task("Installing Gnome")
 
 
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-shell-extension-appindicator gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk kitty gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk gnome-terminal gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard")
 
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
 
   if pipewire:
     print_task("Installing Pipewire")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire pipewire-media-session xdg-desktop-portal-gnome xdg-desktop-portal")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire wireplumber xdg-desktop-portal-gnome xdg-desktop-portal")
     print("Done")
 
   if gnome_utils:
     print_task("Installing Gnome utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "firefox geary eog gnome-calendar evince file-roller gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks noto-fonts noto-fonts-emoji gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "geary eog gnome-calendar evince file-roller gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks noto-fonts noto-fonts-emoji gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
