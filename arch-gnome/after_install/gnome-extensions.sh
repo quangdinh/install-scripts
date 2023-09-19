@@ -2,4 +2,4 @@
 
 set -e
 
-yay -S gnome-shell-extension-espresso-git
+yay -S gnome-browser-connector 

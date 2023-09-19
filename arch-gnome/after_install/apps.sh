@@ -25,3 +25,4 @@ read -p "Do you want to install Obsidian? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   sudo pacman -S obsidian
+fi

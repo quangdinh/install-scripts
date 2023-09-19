@@ -733,7 +733,7 @@ if gnome:
   print_task("Installing Gnome")
 
 
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk alacritty gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk alacritty gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard libappindicator-gtk3")
 
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
