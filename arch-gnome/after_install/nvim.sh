@@ -2,8 +2,6 @@
 
 set -e
 
-sudo pacman -S --noconfirm wget ripgrep python-pip
+sudo pacman -S --noconfirm python-neovim fd python-wget ripgrep python-pip
 yarn global add neovim
-python3 -m pip install --upgrade pip
-pip3 install --user neovim
 gem install neovim
