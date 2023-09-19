@@ -15,12 +15,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   yay -S 1password
 fi
 
-read -p "Do you want to install Telegram Desktop? " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  yay -S telegram-desktop-bin
-fi
-
 read -p "Do you want to install Gimp? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then

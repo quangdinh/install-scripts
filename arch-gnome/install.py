@@ -733,7 +733,7 @@ if gnome:
   print_task("Installing Gnome")
 
 
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk gnome-terminal gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "gnome-shell gnome-backgrounds gdm xdg-utils xdg-user-dirs-gtk alacritty gnome-control-center gnome-keyring mutter gnome-menus sof-firmware gnome-themes-extra wl-clipboard")
 
   run_chroot("/usr/bin/systemctl", "enable", "gdm")
   print("Done")
@@ -745,7 +745,7 @@ if gnome:
 
   if gnome_utils:
     print_task("Installing Gnome utilities")
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "geary eog gnome-calendar evince file-roller gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks noto-fonts noto-fonts-emoji gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
+    run_chroot("/usr/bin/pacman", "-S --noconfirm", "eog gnome-calendar evince file-roller gnome-screenshot gnome-shell-extensions gnome-system-monitor nautilus sushi gnome-tweaks noto-fonts noto-fonts-emoji gnome-calculator gvfs gvfs-smb gvfs-nfs gvfs-mtp gvfs-afc")
     print("Done")
   if gnome_multimedia:
     print_task("Installing Gnome multimedia applications")
@@ -755,7 +755,7 @@ if gnome:
 
 if git_base:
   print_task("Installing development packages")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git git-delta gitui rustup base-devel go nodejs-lts-gallium npm yarn")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git git-delta lazygit rustup base-devel go")
   print("Done")
 
 
