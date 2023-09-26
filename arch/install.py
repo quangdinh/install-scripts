@@ -114,6 +114,8 @@ def ask_username():
 def ask_filesystem():
   fs = request_input("Choose filesystem (ext4, btrfs, [xfs]): ")
   if fs.lower() == "btrfs" or fs.lower() == "xfs" or fs.lower() == "" or fs.lower() == "ext4":
+    if fs == "":
+      return "xfs"
     return fs
   print("Invalid option\n")
   return ask_filesystem()
@@ -426,6 +428,12 @@ q = request_input("Do you want to install yay? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   yay = False
 
+sound_apps = True
+q = request_input("Do you want to install audio drivers? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  sound_apps = False
+
+
 clear()
 print("This script will install Arch Linux as follow:")
 
@@ -685,7 +693,7 @@ if bluetooth:
 
 
 if sound_apps:
-  print_task("Installing Sound")
+  print_task("Installing Audio Drivers")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "cmus pulseaudio sof-firmware pulsemixer")
   if bluetooth:
     run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
