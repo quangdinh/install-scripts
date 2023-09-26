@@ -428,11 +428,15 @@ q = request_input("Do you want to install yay? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   yay = False
 
-sound_apps = True
+audio = True
 q = request_input("Do you want to install audio drivers? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
-  sound_apps = False
+  audio = False
 
+pipewire = True
+q = request_input("Do you want to install pipwire? [Yes]/No ")
+if q.lower() == "no" or q.lower() == "n":
+  pipewire = False
 
 clear()
 print("This script will install Arch Linux as follow:")
@@ -454,6 +458,8 @@ print("{:>35}{:<1} {:<50}".format("Timezone", ":", timezone))
 print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
 print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
+print("{:>35}{:<1} {:<50}".format("Audio drivers", ":", string_bool(audio)))
+print("{:>35}{:<1} {:<50}".format("Pipewire", ":", string_bool(pipewire)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
 print("{:>35}{:<1} {:<50}".format("Development packages", ":", string_bool(git_base)))
 print()
@@ -692,7 +698,7 @@ if bluetooth:
   print("Done")
 
 
-if sound_apps:
+if audio:
   print_task("Installing Audio Drivers")
   run_chroot("/usr/bin/pacman", "-S --noconfirm", "cmus pulseaudio sof-firmware pulsemixer")
   if bluetooth:
