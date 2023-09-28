@@ -665,7 +665,7 @@ if audio:
 
 if git_base:
   print_task("Installing development packages")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git git-delta lazygit rustup base-devel go")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "git git-delta lazygit rustup base-devel go cmake")
   print("Done")
 
 
