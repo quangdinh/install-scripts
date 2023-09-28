@@ -262,11 +262,33 @@ def parse_efi(efi_part):
       sys.exit(0)
   return dev, part
 
-def ask_hide_grub():
-  h = request_input("Do you want to hide Grub menu? [Yes]/No ")
-  if h.lower() == "yes" or h.lower() == "y" or h == "":
-    return True
-  return False
+def hide_system_apps():
+  shell_script = """
+#!/usr/bin/env bash
+
+sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo )
+dir="/mnt/usr/share/applications"
+for app in ${sys_apps[@]}; do
+  file_name="$dir/$app.desktop"
+  echo -ne "Checking $app: "
+  if [ -f $file_name ]; then
+    var_hidden=$(cat $file_name | egrep -ohm1 "Hidden=(true|false)")
+    if [ -z $var_hidden ]; then
+      echo 'Hidden=true' >> $file_name
+      echo -ne "Set Hidden=true\\n"
+    else
+      sed -i -e 's/Hidden=.*/Hidden=true/g' $file_name
+      echo -ne "Update Hidden=true\\n"
+    fi
+  else
+    echo -ne "Skipping\\n"
+  fi
+done
+  """
+  with open("/tmp/hide_sys", "a") as f:
+    f.write(shell_script)
+  run_command("sh", "/tmp/hide_sys")
+  os.remove("/tmp/hide_sys")
 
 def parse_hooks_encrypt_lvm(encrypt):
   current_hooks = os.popen("cat /mnt/etc/mkinitcpio.conf | grep -oP '^HOOKS=(\(.*\))$'").readline().strip()
@@ -433,11 +455,6 @@ q = request_input("Do you want to install audio drivers? [Yes]/No ")
 if q.lower() == "no" or q.lower() == "n":
   audio = False
 
-pipewire = True
-q = request_input("Do you want to install pipwire? [Yes]/No ")
-if q.lower() == "no" or q.lower() == "n":
-  pipewire = False
-
 clear()
 print("This script will install Arch Linux as follow:")
 
@@ -459,7 +476,6 @@ print("{:>35}{:<1} {:<50}".format("Locales", ":", ", ".join(locales)))
 print("{:>35}{:<1} {:<50}".format("Lang", ":", locales[0] + ".UTF-8"))
 print("{:>35}{:<1} {:<50}".format("Bluetooth", ":", string_bool(bluetooth)))
 print("{:>35}{:<1} {:<50}".format("Audio drivers", ":", string_bool(audio)))
-print("{:>35}{:<1} {:<50}".format("Pipewire", ":", string_bool(pipewire)))
 print("{:>35}{:<1} {:<50}".format("Yubikey (opensc & pam-u2f)", ":", string_bool(yubi_key)))
 print("{:>35}{:<1} {:<50}".format("Development packages", ":", string_bool(git_base)))
 print()
@@ -682,7 +698,8 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System Utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "yadm neovim bottom bat procs exa python-neovim fd wget ripgrep python-pip ranger")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "brightnessctl yadm neovim bottom bat procs exa python-neovim fd wget ripgrep python-pip ranger")
+hide_system_apps()
 print("Done")
 
 if yubi_key:
@@ -700,14 +717,7 @@ if bluetooth:
 
 if audio:
   print_task("Installing Audio Drivers")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "cmus pulseaudio sof-firmware pulsemixer")
-  if bluetooth:
-    run_chroot("/usr/bin/pacman", "-S --noconfirm", "pulseaudio-bluetooth")
-  print("Done")
-
-if pipewire:
-  print_task("Installing Pipewire")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire wireplumber")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "cmus pipewire wireplumber pipewire-audio sof-firmware pipewire-pulse pulsemixer")
   print("Done")
 
 if git_base:
