@@ -262,34 +262,6 @@ def parse_efi(efi_part):
       sys.exit(0)
   return dev, part
 
-def hide_system_apps():
-  shell_script = """
-#!/usr/bin/env bash
-
-sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo )
-dir="/mnt/usr/share/applications"
-for app in ${sys_apps[@]}; do
-  file_name="$dir/$app.desktop"
-  echo -ne "Checking $app: "
-  if [ -f $file_name ]; then
-    var_hidden=$(cat $file_name | egrep -ohm1 "Hidden=(true|false)")
-    if [ -z $var_hidden ]; then
-      echo 'Hidden=true' >> $file_name
-      echo -ne "Set Hidden=true\\n"
-    else
-      sed -i -e 's/Hidden=.*/Hidden=true/g' $file_name
-      echo -ne "Update Hidden=true\\n"
-    fi
-  else
-    echo -ne "Skipping\\n"
-  fi
-done
-  """
-  with open("/tmp/hide_sys", "a") as f:
-    f.write(shell_script)
-  run_command("sh", "/tmp/hide_sys")
-  os.remove("/tmp/hide_sys")
-
 def parse_hooks_encrypt_lvm(encrypt):
   current_hooks = os.popen("cat /mnt/etc/mkinitcpio.conf | grep -oP '^HOOKS=(\(.*\))$'").readline().strip()
   objects = re.search('\((.*)\)', current_hooks)
@@ -361,34 +333,6 @@ def format_root(partition, fs):
     run_command("/usr/bin/mkfs.ext4", partition)
   else:
     run_command("/usr/bin/mkfs.xfs", partition)
-
-def hide_system_apps():
-  shell_script = """
-#!/usr/bin/env bash
-
-sys_apps=( avahi-discover bssh bvnc nm-connection-editor qv4l2 qvidcap lstopo )
-dir="/mnt/usr/share/applications"
-for app in ${sys_apps[@]}; do
-  file_name="$dir/$app.desktop"
-  echo -ne "Checking $app: "
-  if [ -f $file_name ]; then
-    var_hidden=$(cat $file_name | egrep -ohm1 "Hidden=(true|false)")
-    if [ -z $var_hidden ]; then
-      echo 'Hidden=true' >> $file_name
-      echo -ne "Set Hidden=true\\n"
-    else
-      sed -i -e 's/Hidden=.*/Hidden=true/g' $file_name
-      echo -ne "Update Hidden=true\\n"
-    fi
-  else
-    echo -ne "Skipping\\n"
-  fi
-done
-  """
-  with open("/tmp/hide_sys", "a") as f:
-    f.write(shell_script)
-  run_command("sh", "/tmp/hide_sys")
-  os.remove("/tmp/hide_sys")
 
 cpu = detect_cpu()
 vga = detect_vga().lower()
@@ -699,7 +643,6 @@ print("Done")
 
 print_task("Installing System Utilities")
 run_chroot("/usr/bin/pacman", "-S --noconfirm", "openssh brightnessctl yadm neovim bottom bat procs exa python-neovim fd wget ripgrep python-pip ranger")
-hide_system_apps()
 print("Done")
 
 if yubi_key:
