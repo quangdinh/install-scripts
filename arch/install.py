@@ -642,7 +642,7 @@ run_chroot("/usr/bin/systemctl", "enable", "NetworkManager")
 print("Done")
 
 print_task("Installing System Utilities")
-run_chroot("/usr/bin/pacman", "-S --noconfirm", "openssh brightnessctl yadm neovim bottom bat procs exa python-neovim fd wget ripgrep python-pip ranger")
+run_chroot("/usr/bin/pacman", "-S --noconfirm", "openssh brightnessctl yadm neovim bottom bat procs exa python-neovim fd wget ripgrep python-pip ranger unzip")
 print("Done")
 
 if yubi_key:

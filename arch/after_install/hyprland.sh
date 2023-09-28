@@ -7,4 +7,5 @@ sudo pacman -S --noconfirm hyprland hyprpaper swaylock swayidle waybar wofi alac
   imv zathura zathura-pdf-poppler mpv xdg-desktop-portal-hyprland mako ly
 sudo ./gnome_keyring.py
 sudo systemctl enable ly.service
-sudo hide_system_apps.sh
+sudo ./hide_system_apps.sh
+./ranger.sh
