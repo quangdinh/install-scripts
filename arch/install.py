@@ -660,7 +660,7 @@ if bluetooth:
 
 if audio:
   print_task("Installing Audio Drivers")
-  run_chroot("/usr/bin/pacman", "-S --noconfirm", "cmus pipewire wireplumber pipewire-audio sof-firmware pipewire-pulse pulsemixer")
+  run_chroot("/usr/bin/pacman", "-S --noconfirm", "pipewire wireplumber pipewire-audio sof-firmware pipewire-pulse pulsemixer")
   print("Done")
 
 if git_base:
