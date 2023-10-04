@@ -12,6 +12,6 @@ sudo ./gnome_keyring.py
 sudo systemctl enable ly.service
 sudo ./hide_system_apps.sh
 ./ranger.sh
-sudo mkir -p /usr/local/bin
+sudo mkdir -p /usr/local/bin
 sudo cp ./hyprland/* /usr/local/bin/
 mkdir -p ~/.config/ncmpcpp/previews
