@@ -6,4 +6,5 @@ set -e
 ./firewall.sh
 ./hyprland.sh
 yay -Syu --noconfirm rbenv ruby-build nvm 1password mongodb-compass \
-  libfreoffice-fresh postman-bin slack-desktop-wayland google-chrome
+  libfreoffice-fresh postman-bin slack-desktop-wayland google-chrome \
+  gita

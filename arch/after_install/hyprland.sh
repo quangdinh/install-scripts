@@ -15,3 +15,5 @@ sudo ./hide_system_apps.sh
 sudo mkdir -p /usr/local/bin
 sudo cp ./hyprland/* /usr/local/bin/
 mkdir -p ~/.config/ncmpcpp/previews
+mkdir -p ~/.config/mpd/playlist
+systemctl --user enable mpd
